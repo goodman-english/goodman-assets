@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Atotal Revision Flashcards</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box}body{margin:0}img{max-width:100%}
+/* Layout: one study column — set picker on top, one big card in the middle, the two answer buttons under it */
+:root{
+  --crimson:#B90541; --crimson-dark:#8F0433; --crimson-tint:#FBEAF0;
+  --ink:#27272A; --ink2:#3F3F46; --muted:#71717A; --rule:#E4E4E7;
+  --panel:#F4F4F5; --page:#FAFAFA; --card:#FFFFFF; --plate:#FFFFFF;
+  --ok:#00736B; --ok-bg:#E2F2EF; --again:#B42318; --again-bg:#FDECEA;
+  --blue:#1A4079; --blue-bg:#E8EDF5;
+  --shadow:0 1px 2px rgba(39,39,42,.06),0 8px 24px rgba(39,39,42,.08);
+  --font:"Montserrat",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --crimson:#F0507D; --crimson-dark:#FF7A9C; --crimson-tint:#3A1220;
+  --ink:#F4F4F5; --ink2:#D4D4D8; --muted:#A1A1AA; --rule:#3F3F46;
+  --panel:#27272A; --page:#18181B; --card:#202023; --plate:#FFFFFF;
+  --ok:#4CC2B4; --ok-bg:#12302C; --again:#F2877C; --again-bg:#3A1A17;
+  --blue:#8FB0E8; --blue-bg:#1B2536;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --crimson:#F0507D; --crimson-dark:#FF7A9C; --crimson-tint:#3A1220;
+  --ink:#F4F4F5; --ink2:#D4D4D8; --muted:#A1A1AA; --rule:#3F3F46;
+  --panel:#27272A; --page:#18181B; --card:#202023; --plate:#FFFFFF;
+  --ok:#4CC2B4; --ok-bg:#12302C; --again:#F2877C; --again-bg:#3A1A17;
+  --blue:#8FB0E8; --blue-bg:#1B2536;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35); color-scheme:dark}
+[hidden]{display:none!important}
+html,body{background:var(--page)}
+body{color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-block:18px 4px;border-bottom:3px solid var(--crimson)}
+.logo{background:var(--plate);border-radius:8px;padding:6px 10px;display:flex}
+.logo img{height:38px;width:auto;display:block}
+.ttl{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ttl h1{margin:0;font-size:clamp(22px,4vw,30px);font-weight:800;letter-spacing:-.01em;text-wrap:balance}
+.ttl p{margin:0;color:var(--muted);font-size:14px}
+.hu{color:var(--muted);font-size:.86em;font-weight:500}
+.label{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* set picker */
+.sets{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,135px),1fr));gap:10px}
+.set{font:inherit;text-align:left;cursor:pointer;background:var(--card);color:var(--ink);border:1.5px solid var(--rule);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.set:hover{border-color:var(--muted)}
+.set[aria-pressed="true"]{border-color:var(--crimson);background:var(--crimson-tint)}
+.set:focus-visible,.chip:focus-visible,.btn:focus-visible,.card:focus-visible,.tool:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.set b{font-size:15px;font-weight:700;line-height:1.25}
+.set .hu{font-size:12.5px}
+.meter{height:5px;border-radius:3px;background:var(--panel);overflow:hidden;margin-top:6px}
+.meter i{display:block;height:100%;background:var(--ok);width:0;transition:width .3s}
+.set small{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{font:inherit;font-size:13px;font-weight:600;cursor:pointer;border-radius:999px;padding:6px 12px;border:1.5px solid var(--rule);background:transparent;color:var(--ink2)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--page);border-color:var(--ink)}
+.spacer{flex:1}
+.tool{font:inherit;font-size:13px;font-weight:600;cursor:pointer;border:0;background:var(--panel);color:var(--ink2);border-radius:8px;padding:7px 12px}
+.tool:hover{color:var(--ink)}
+
+/* the study area */
+.study{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;justify-items:center}
+.progress{width:100%;max-width:760px;display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-variant-numeric:tabular-nums}
+.progress .count{font-weight:700}
+.track{width:100%;max-width:760px;height:8px;border-radius:4px;background:var(--panel);overflow:hidden}
+.track i{display:block;height:100%;width:0;background:var(--ok);transition:width .35s}
+.scene{width:100%;max-width:760px;perspective:1400px}
+.card{position:relative;width:100%;min-height:360px;cursor:pointer;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.2,.7,.2,1);border-radius:16px;outline:none}
+.card.flipped{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--card);border-radius:16px;box-shadow:var(--shadow);border:1px solid var(--rule);display:flex;flex-direction:column;padding:22px 26px;gap:12px;overflow:auto}
+.back{transform:rotateY(180deg);border-top:6px solid var(--ok)}
+.front{border-top:6px solid var(--crimson)}
+.face .kind{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.face .body{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:12px;min-height:0}
+.big{font-size:clamp(22px,4.4vw,34px);font-weight:700;line-height:1.25;text-wrap:balance;max-width:30ch}
+.mid{font-size:clamp(18px,3.2vw,24px);font-weight:600;line-height:1.35;text-wrap:balance;max-width:36ch}
+.wrong{text-decoration:line-through;text-decoration-color:var(--again);text-decoration-thickness:2px;color:var(--muted)}
+.note{background:var(--panel);border-radius:10px;padding:10px 14px;font-size:15px;max-width:52ch;text-align:left}
+.note .hu{display:block;margin-top:2px}
+.ex{font-style:italic;color:var(--ink2);font-size:16px;max-width:52ch}
+.pic{width:100%;max-width:440px;aspect-ratio:4/3;object-fit:contain;border-radius:10px;background:var(--panel);max-height:260px}
+.credit{font-size:11px;color:var(--muted)}
+.credit a{color:inherit}
+.hint{font-size:13px;color:var(--muted)}
+.lesson{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tag{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:6px;background:var(--crimson-tint);color:var(--crimson)}
+.back .tag{background:var(--ok-bg);color:var(--ok)}
+
+.answer{width:100%;max-width:760px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn{font:inherit;cursor:pointer;border-radius:12px;padding:14px 10px;font-size:17px;font-weight:700;border:2px solid transparent;display:flex;flex-direction:column;align-items:center;gap:0;line-height:1.2}
+.btn small{font-size:12.5px;font-weight:500;opacity:.85}
+.btn.again{background:var(--again-bg);color:var(--again);border-color:var(--again)}
+.btn.know{background:var(--ok-bg);color:var(--ok);border-color:var(--ok)}
+.btn.flip{grid-column:1/-1;background:var(--crimson);color:#FFFFFF}
+.btn.flip small{color:#FFFFFF}
+.keys{font-size:12.5px;color:var(--muted);text-align:center}
+.done{width:100%;max-width:760px;background:var(--card);border-radius:16px;border:1px solid var(--rule);box-shadow:var(--shadow);padding:34px 26px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+.done h2{margin:0;font-size:28px;font-weight:800}
+details.credits{font-size:13px;color:var(--muted);max-width:760px;margin:0 auto;width:100%}
+details.credits summary{cursor:pointer;font-weight:600}
+details.credits ul{padding-left:18px;columns:2;column-gap:28px}
+@media (max-width:560px){details.credits ul{columns:1}.face{padding:18px 16px}.card{min-height:400px}}
+@media (prefers-reduced-motion: reduce){.card{transition:none}.track i,.meter i{transition:none}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="ttl">
+      <span class="label">Atotal group · Final test revision</span>
+      <h1>Revision flashcards</h1>
+      <p>Everything from the course, lessons 1–99 · <span class="hu">Ismétlés a záróvizsgára</span></p>
+    </div>
+    <div class="logo"><img src="img/globus-logo.png" alt="Globus Vállalati Nyelvoktatás"></div>
+  </header>
+
+  <section aria-labelledby="pick">
+    <div class="label" id="pick" style="margin-bottom:8px">Choose a set · <span class="hu" style="text-transform:none;letter-spacing:0">Válassz egy csomagot</span></div>
+    <div class="sets" id="sets"></div>
+  </section>
+
+  <div class="bar" id="bar">
+    <div class="bar" id="topics"></div>
+    <span class="spacer"></span>
+    <button class="tool" id="swap" type="button" title="Show the other side first">⇄ Swap sides</button>
+    <button class="tool" id="shuffle" type="button">Shuffle · <span class="hu">Keverés</span></button>
+    <button class="tool" id="reset" type="button">Start again · <span class="hu">Újrakezdés</span></button>
+  </div>
+
+  <main class="study" id="study">
+    <div class="progress"><span><span class="count" id="known">0</span> / <span id="total">0</span> known · <span class="hu">tudom</span></span><span class="hint" id="left"></span></div>
+    <div class="track"><i id="trackbar"></i></div>
+    <div class="scene" id="scene">
+      <div class="card" id="card" tabindex="0" role="button" aria-label="Flashcard. Press Space to turn it over.">
+        <div class="face front" id="front"></div>
+        <div class="face back" id="back"></div>
+      </div>
+    </div>
+    <div class="answer" id="answer"></div>
+    <div class="keys">Tap the card to turn it over · <span class="hu">Koppints a kártyára a megfordításhoz</span> · Keys: Space, ← again, → I know it</div>
+    <div class="done" id="done" hidden>
+      <h2>Well done!</h2>
+      <p id="doneText">You know every card in this set.</p>
+      <p class="hu">Szép munka! Ebben a csomagban minden kártyát tudsz.</p>
+      <button class="btn know" id="again-all" type="button" style="min-width:220px">Practise this set again<small>Gyakorold újra</small></button>
+    </div>
+  </main>
+
+  <details class="credits"><summary>Picture credits · Wikimedia Commons</summary><ul id="credits"></ul></details>
+</div>
+
+<script>
+const DATA = {"sets": [{"id": "hu-en", "title": "Hungarian → English", "titleHu": "Magyarról angolra", "topics": ["Work and insurance", "Travel and airport", "Hotel", "Restaurant and food", "Phone and e-mail", "Daily routine and free time", "Health and feelings", "Numbers and charts"], "cards": [{"front": "kárszakértő, kárügyintéző", "back": "a claims adjuster", "example": "The claims adjuster checks the damage after an accident.", "topic": "Work and insurance", "lesson": "L2-3, L19"}, {"front": "károsult, igénylő", "back": "a claimant", "example": "I talk to claimants on the phone every day.", "topic": "Work and insurance", "lesson": "L19"}, {"front": "felméri a kárt", "back": "assess the damage", "example": "An expert came to assess the damage to the roof.", "topic": "Work and insurance", "lesson": "L19, L41-42"}, {"front": "felelős valamiért", "back": "be responsible for", "example": "I'm responsible for a team of ten people.", "topic": "Work and insurance", "lesson": "L19"}, {"front": "körbevezet valakit", "back": "show somebody around", "example": "Let me show you around the office.", "topic": "Work and insurance", "lesson": "L66, L71-72"}, {"front": "jóváhagy (valamit)", "back": "approve", "example": "The manager approved the claim on Friday.", "topic": "Work and insurance", "lesson": "L91-92"}, {"front": "közvetlen felettes, csoportvezető", "back": "a supervisor", "example": "My supervisor checks my work every week.", "topic": "Work and insurance", "lesson": "L91-92"}, {"front": "indulás", "back": "departure", "example": "Check the departure time on the board.", "topic": "Travel and airport", "lesson": "L43-44"}, {"front": "érkezés", "back": "arrival", "example": "Our arrival time in London is half past ten.", "topic": "Travel and airport", "lesson": "L43-44"}, {"front": "biztonsági ellenőrzés", "back": "a security check", "example": "At the security check, I had to take off my shoes.", "topic": "Travel and airport", "lesson": "L43-44"}, {"front": "felszáll a repülőgépre", "back": "board a plane", "example": "We boarded the plane twenty minutes late.", "topic": "Travel and airport", "lesson": "L43-44"}, {"front": "útiterv", "back": "an itinerary", "example": "The guide gave us the itinerary for the trip.", "topic": "Travel and airport", "lesson": "L40"}, {"front": "városnézés", "back": "a sightseeing tour", "example": "We went on a sightseeing tour in Rome.", "topic": "Travel and airport", "lesson": "L40"}, {"front": "külföldre megy", "back": "go abroad", "example": "Many young people go abroad to work.", "topic": "Travel and airport", "lesson": "L43-44"}, {"front": "vágány (az állomáson)", "back": "a platform", "example": "The train to Vienna leaves from platform 6.", "topic": "Travel and airport", "lesson": "L38-39"}, {"front": "kulcskártya", "back": "a key card", "example": "I left my key card in the room.", "topic": "Hotel", "lesson": "L94-95"}, {"front": "bejelentkezőlap", "back": "a registration form", "example": "Please write your passport number on the registration form.", "topic": "Hotel", "lesson": "L94-95"}, {"front": "légkondicionáló, klíma", "back": "an air conditioner", "example": "The air conditioner in my room doesn't work.", "topic": "Hotel", "lesson": "L57"}, {"front": "széf", "back": "a safe", "example": "You can keep your passport in the safe.", "topic": "Hotel", "lesson": "L94-95"}, {"front": "paplan", "back": "a duvet", "example": "This duvet is too thin for winter.", "topic": "Hotel", "lesson": "L94-95"}, {"front": "csap", "back": "a tap", "example": "The hot water tap in the bathroom doesn't work.", "topic": "Hotel", "lesson": "L94-95"}, {"front": "szállodai szobát foglal", "back": "book a hotel room", "example": "I booked a hotel room near the station.", "topic": "Hotel", "lesson": "L73-74"}, {"front": "előétel", "back": "an appetizer (BrE also: a starter)", "example": "We had soup as an appetizer.", "topic": "Restaurant and food", "lesson": "L88-89"}, {"front": "főétel", "back": "a main course", "example": "For my main course, I'd like the fish.", "topic": "Restaurant and food", "lesson": "L88-90"}, {"front": "köret", "back": "a side dish", "example": "Rice is a good side dish with chicken.", "topic": "Restaurant and food", "lesson": "L87"}, {"front": "asztalt foglal", "back": "book a table", "example": "Can I book a table for two for Friday evening?", "topic": "Restaurant and food", "lesson": "L87, L90"}, {"front": "fix menü", "back": "a set menu", "example": "The set menu has three courses.", "topic": "Restaurant and food", "lesson": "L90"}, {"front": "étel, fogás", "back": "a dish", "example": "Goulash is a famous Hungarian dish.", "topic": "Restaurant and food", "lesson": "L58-59"}, {"front": "számla (étteremben)", "back": "the bill", "example": "Can we have the bill, please?", "topic": "Restaurant and food", "lesson": "L60"}, {"front": "desszert", "back": "dessert", "example": "We had ice cream for dessert.", "topic": "Restaurant and food", "lesson": "L61"}, {"front": "Tartsa a vonalat, kérem!", "back": "Hold the line, please.", "example": "Hold the line, please. Mr Brown is coming.", "topic": "Phone and e-mail", "lesson": "L32-33"}, {"front": "Kapcsolom.", "back": "I'll connect you.", "example": "One moment, I'll connect you to the HR department.", "topic": "Phone and e-mail", "lesson": "L32-33"}, {"front": "mellék (mellékszám)", "back": "an extension (number)", "example": "My extension number is 214.", "topic": "Phone and e-mail", "lesson": "L32-33"}, {"front": "nem fogadott hívás", "back": "a missed call", "example": "I had three missed calls after the meeting.", "topic": "Phone and e-mail", "lesson": "L97-98"}, {"front": "… ügyében telefonálok.", "back": "I'm calling about …", "example": "Hello, I'm calling about the invoice.", "topic": "Phone and e-mail", "lesson": "L71-72"}, {"front": "utánkövető e-mail", "back": "a follow-up e-mail", "example": "I sent a follow-up e-mail after the meeting.", "topic": "Phone and e-mail", "lesson": "L23-24"}, {"front": "Üdvözlettel (e-mail végén)", "back": "Kind regards", "example": "I always end my work e-mails with 'Kind regards'.", "topic": "Phone and e-mail", "lesson": "L43-44"}, {"front": "betűz", "back": "spell", "example": "Can you spell your surname, please?", "topic": "Phone and e-mail", "lesson": "L71-72"}, {"front": "felébred", "back": "wake up", "example": "I usually wake up at six o'clock.", "topic": "Daily routine and free time", "lesson": "L2-3"}, {"front": "lefekszik (aludni)", "back": "go to bed", "example": "I usually go to bed at eleven.", "topic": "Daily routine and free time", "lesson": "L8-9"}, {"front": "időt tölt valakivel, együtt lóg valakivel", "back": "hang out with somebody", "example": "I like hanging out with my friends on Saturdays.", "topic": "Daily routine and free time", "lesson": "L10, L94-95"}, {"front": "napozik", "back": "sunbathe", "example": "We sunbathed on the beach all afternoon.", "topic": "Daily routine and free time", "lesson": "L61"}, {"front": "elalszik (későn ébred)", "back": "oversleep", "example": "I overslept and missed the bus.", "topic": "Daily routine and free time", "lesson": "L73-74"}, {"front": "túrázni megy", "back": "go hiking", "example": "We often go hiking in the mountains.", "topic": "Daily routine and free time", "lesson": "L75"}, {"front": "felöltözik", "back": "get dressed", "example": "I get dressed and then I have breakfast.", "topic": "Daily routine and free time", "lesson": "L94-95"}, {"front": "vérnyomás", "back": "blood pressure", "example": "My father has high blood pressure.", "topic": "Health and feelings", "lesson": "L8-9, L93"}, {"front": "leég (a napon)", "back": "get sunburnt", "example": "I got sunburnt on the first day of my holiday.", "topic": "Health and feelings", "lesson": "L68"}, {"front": "betegszabadságon van", "back": "be on sick leave", "example": "My colleague is on sick leave this week.", "topic": "Health and feelings", "lesson": "L76-77, L96"}, {"front": "megőrzi a nyugalmát", "back": "stay calm", "example": "Stay calm and take a deep breath.", "topic": "Health and feelings", "lesson": "L76-77"}, {"front": "nyomás alatt van", "back": "be under pressure", "example": "We're under pressure because of the deadline.", "topic": "Health and feelings", "lesson": "L78"}, {"front": "fejfájás", "back": "a headache", "example": "I have a terrible headache today.", "topic": "Health and feelings", "lesson": "L91-93"}, {"front": "Nem érzem jól magam.", "back": "I don't feel well.", "example": "I don't feel well, so I'm going home early.", "topic": "Health and feelings", "lesson": "L93"}, {"front": "átlagosan", "back": "on average", "example": "On average, I spend an hour in meetings every day.", "topic": "Numbers and charts", "lesson": "L4-6, L97-98"}, {"front": "tizenkettedik", "back": "twelfth", "example": "Our office is on the twelfth floor.", "topic": "Numbers and charts", "lesson": "L25-26"}, {"front": "kerek szám", "back": "a round number", "example": "100 is a nice round number.", "topic": "Numbers and charts", "lesson": "L71-72"}, {"front": "oszlopdiagram", "back": "a bar chart", "example": "The bar chart shows our sales for each year.", "topic": "Numbers and charts", "lesson": "L82-84"}, {"front": "nyereség, profit", "back": "profit", "example": "Our profit went up last year.", "topic": "Numbers and charts", "lesson": "L82-84"}, {"front": "negyedév", "back": "a quarter", "example": "Sales were good in the first quarter.", "topic": "Numbers and charts", "lesson": "L82-84"}, {"front": "egyharmad", "back": "one third", "example": "One third of our clients are from Budapest.", "topic": "Numbers and charts", "lesson": "L96"}]}, {"id": "definition", "title": "What's the word?", "titleHu": "Mi a szó?", "cards": [{"front": "a person who works all the time and can't stop working", "back": "a workaholic", "example": "My boss is a workaholic. He works on Sundays too.", "topic": "Work and insurance", "lesson": "L13-15"}, {"front": "any day from Monday to Friday", "back": "a weekday", "example": "On weekdays I get up at six.", "topic": "Daily routine and free time", "lesson": "L13-15"}, {"front": "a phone at home or in the office that has a cable", "back": "a landline (phone)", "example": "We still have a landline in the office.", "topic": "Phone and e-mail", "lesson": "L23-24, L97-98"}, {"front": "a long line of cars that can't move", "back": "a traffic jam", "example": "I was late because of a traffic jam.", "topic": "Town and places", "lesson": "L23-24"}, {"front": "a letter or message that asks you to come to a party or an event", "back": "an invitation", "example": "Thank you for the invitation to your party.", "topic": "Phone and e-mail", "lesson": "L25-26"}, {"front": "a document about your education and your jobs; you send it when you want a new job", "back": "a CV", "example": "Please send your CV by e-mail.", "topic": "Work and insurance", "lesson": "L32-33"}, {"front": "the floor of a building at street level", "back": "the ground floor", "example": "Reception is on the ground floor.", "topic": "Town and places", "lesson": "L32-33"}, {"front": "a piece of land with water all around it", "back": "an island", "example": "Malta is a small island.", "topic": "Travel and airport", "lesson": "L34"}, {"front": "moving stairs in a shop or a station", "back": "an escalator", "example": "Take the escalator to the second floor.", "topic": "Town and places", "lesson": "L40, L87"}, {"front": "the main office of a company", "back": "headquarters", "example": "We have a meeting at headquarters tomorrow.", "topic": "Work and insurance", "lesson": "L40"}, {"front": "what you get when you finish university", "back": "a degree", "example": "She has a degree in economics.", "topic": "Work and insurance", "lesson": "L1, L41-42"}, {"front": "a small thing for your money and cards; you keep it in your pocket or bag", "back": "a wallet", "example": "I can't find my wallet!", "topic": "Travel and airport", "lesson": "L43-44, L94-95"}, {"front": "a shop where you can buy medicine", "back": "a pharmacy (BrE also: a chemist's)", "example": "Is there a pharmacy near here?", "topic": "Town and places", "lesson": "L45"}, {"front": "tables, chairs, beds and sofas (it has no plural)", "back": "furniture", "example": "We bought new furniture for the office.", "topic": "Hotel", "lesson": "L58-59"}, {"front": "an official paper that tells a company how much money to pay", "back": "an invoice", "example": "We paid the invoice last week.", "topic": "Work and insurance", "lesson": "L60"}, {"front": "the way you travel from one place to another", "back": "a route", "example": "This is the fastest route to the airport.", "topic": "Travel and airport", "lesson": "L61"}, {"front": "a very dry, hot place with a lot of sand", "back": "a desert", "example": "Camels live in the desert.", "topic": "Travel and airport", "lesson": "L61"}, {"front": "a person who gets up very early and likes mornings", "back": "an early bird", "example": "I'm an early bird. I start work at seven.", "topic": "Daily routine and free time", "lesson": "L65"}, {"front": "the last day or time when you must finish a job", "back": "a deadline", "example": "The deadline for the report is Friday.", "topic": "Work and insurance", "lesson": "L65"}, {"front": "a holiday for two people who just got married", "back": "a honeymoon", "example": "They went to Italy on their honeymoon.", "topic": "Travel and airport", "lesson": "L68"}, {"front": "a cream you put on your skin when you are in the sun", "back": "sunscreen", "example": "Don't forget your sunscreen at the beach.", "topic": "Health and feelings", "lesson": "L68"}, {"front": "always on time, never late", "back": "punctual", "example": "Please be punctual. The meeting starts at nine.", "topic": "Work and insurance", "lesson": "L79"}, {"front": "a short sleep during the day", "back": "a nap", "example": "I sometimes take a nap after lunch.", "topic": "Daily routine and free time", "lesson": "L79"}, {"front": "a person who cooks in a restaurant as a job", "back": "a chef", "example": "The chef makes very good soup.", "topic": "Restaurant and food", "lesson": "L87"}, {"front": "a floor of a building under the ground, often for parking", "back": "a basement", "example": "You can park your car in the basement.", "topic": "Town and places", "lesson": "L87"}, {"front": "a hard hat that protects your head", "back": "a helmet", "example": "You have to wear a helmet on a motorbike.", "topic": "Travel and airport", "lesson": "L88-89"}, {"front": "money you have to pay when you break a rule", "back": "a fine", "example": "He got a fine for parking in the wrong place.", "topic": "Town and places", "lesson": "L93"}, {"front": "the person at the front desk of a hotel", "back": "a receptionist", "example": "The receptionist gave us our key cards.", "topic": "Hotel", "lesson": "L94-95"}, {"front": "extra money you give to a waiter", "back": "a tip", "example": "The food was great, so we left a big tip.", "topic": "Restaurant and food", "lesson": "L97-98"}, {"front": "a thing you buy on holiday to remember the place", "back": "a souvenir", "example": "I bought some souvenirs at the market.", "topic": "Travel and airport", "lesson": "L99"}]}, {"id": "mistakes", "title": "Find the mistake", "titleHu": "Keresd a hibát", "cards": [{"front": "What time you finish work?", "back": "What time do you finish work?", "note": "Questions: question word + do/does + subject + verb.", "noteHu": "Kérdés: kérdőszó + do/does + alany + ige.", "lesson": "L2-3"}, {"front": "I don't have nothing in my bag.", "back": "I don't have anything in my bag.", "note": "No double negative: don't … anything (or: I have nothing).", "noteHu": "Nincs kettős tagadás: don't … anything, vagy I have nothing.", "lesson": "L5-6"}, {"front": "Nobody doesn't like Monday mornings.", "back": "Nobody likes Monday mornings.", "note": "Nobody is already negative, so the verb is positive (with -s).", "noteHu": "A nobody már tagadó, ezért az ige állító (és -s-t kap).", "lesson": "L5-6"}, {"front": "The car of my brother is red.", "back": "My brother's car is red.", "note": "For people, use 's, not of.", "noteHu": "Személyeknél 's-t használunk, nem of-ot.", "lesson": "L8-9"}, {"front": "My boss doesn't speaks German.", "back": "My boss doesn't speak German.", "note": "After doesn't, use the base form of the verb (no -s).", "noteHu": "A doesn't után az ige alapalakja áll, -s nélkül.", "lesson": "L17-18"}, {"front": "Let's make a walk after lunch.", "back": "Let's take a walk after lunch.", "note": "We say take a walk, not make a walk.", "noteHu": "Take a walk – a make itt nem jó.", "lesson": "L23-24"}, {"front": "I look forward to meet the new team.", "back": "I look forward to meeting the new team.", "note": "look forward to + -ing (or a noun).", "noteHu": "A look forward to után -ing alak vagy főnév áll.", "lesson": "L23-24, L75"}, {"front": "My birthday is on the fiveth of June.", "back": "My birthday is on the fifth of June.", "note": "5th = fifth (not fiveth).", "noteHu": "5. = fifth, nem fiveth.", "lesson": "L25-26"}, {"front": "The meeting room is in the first floor.", "back": "The meeting room is on the first floor.", "note": "Use on with floors.", "noteHu": "Emeletnél on áll: on the first floor.", "lesson": "L32-33"}, {"front": "He drives very fastly.", "back": "He drives very fast.", "note": "fast is an adjective and an adverb – there is no 'fastly'.", "noteHu": "A fast melléknév és határozószó is – nincs fastly.", "lesson": "L37"}, {"front": "We went to Győr by the car.", "back": "We went to Győr by car.", "note": "by + transport, without the.", "noteHu": "by + jármű, névelő nélkül.", "lesson": "L40"}, {"front": "My daughter went aboard to study in Germany.", "back": "My daughter went abroad to study in Germany.", "note": "abroad = in or to another country; aboard = on a ship or plane.", "noteHu": "abroad = külföldre; aboard = (hajó, repülő) fedélzetére.", "lesson": "L43-44"}, {"front": "Can I have an information about the trip?", "back": "Can I have some information about the trip?", "note": "information is uncountable: no a/an, no -s.", "noteHu": "Az information megszámlálhatatlan: nincs a/an, nincs -s.", "lesson": "L58-59"}, {"front": "I don't interested in golf.", "back": "I'm not interested in golf.", "note": "be interested in: I'm not interested (not I don't).", "noteHu": "be interested in: I'm not interested, nem I don't.", "lesson": "L65"}, {"front": "Did you went to the meeting yesterday?", "back": "Did you go to the meeting yesterday?", "note": "After did, use the base form of the verb.", "noteHu": "A did után az ige alapalakja áll.", "lesson": "L65"}, {"front": "Call me when you will arrive at the station.", "back": "Call me when you arrive at the station.", "note": "After when (about the future), use the present simple, not will.", "noteHu": "A when után jelen idő áll, nem will.", "lesson": "L71-72"}, {"front": "I'm knowing the answer.", "back": "I know the answer.", "note": "We don't use know in the -ing form.", "noteHu": "A know-t nem használjuk -ing alakban.", "lesson": "L73-74"}, {"front": "My wallet stolen on the bus.", "back": "My wallet was stolen on the bus.", "note": "Passive: was / were + 3rd form.", "noteHu": "Szenvedő szerkezet: was / were + 3. alak.", "lesson": "L75"}, {"front": "I am stress because of the deadline.", "back": "I am stressed because of the deadline.", "note": "For a feeling, say I am stressed.", "noteHu": "Érzésre: I am stressed (melléknév).", "lesson": "L76-77"}, {"front": "I make exercise three times a week.", "back": "I do exercise three times a week.", "note": "We say do exercise, not make exercise.", "noteHu": "Do exercise – a make itt nem jó.", "lesson": "L76-77, L83-84"}, {"front": "I don't know if is the shop open.", "back": "I don't know if the shop is open.", "note": "After if: subject + verb (no question word order).", "noteHu": "Az if után egyenes szórend: alany + ige.", "lesson": "L78"}, {"front": "Do you mind to wait a moment?", "back": "Do you mind waiting a moment?", "note": "mind + -ing.", "noteHu": "A mind után -ing alak áll.", "lesson": "L80-81"}, {"front": "Our sales went up 10% last year.", "back": "Our sales went up by 10% last year.", "note": "The size of the change needs by.", "noteHu": "A változás mértéke elé by kell.", "lesson": "L82-84"}, {"front": "The room isn't enough big for ten people.", "back": "The room isn't big enough for ten people.", "note": "enough comes after an adjective: big enough.", "noteHu": "Az enough a melléknév után áll: big enough.", "lesson": "L87"}, {"front": "Does the shop can open on Sundays?", "back": "Can the shop open on Sundays?", "note": "Questions with can: Can + subject + verb (no do/does).", "noteHu": "A can-es kérdésben nincs do/does.", "lesson": "L88-89"}, {"front": "You don't have to smoke in the office. It's forbidden.", "back": "You mustn't smoke in the office. It's forbidden.", "note": "Forbidden = mustn't; don't have to = not necessary.", "noteHu": "Tiltás: mustn't; don't have to = nem kell.", "lesson": "L88-90"}, {"front": "Visitors don't allowed to take photos here.", "back": "Visitors aren't allowed to take photos here.", "note": "be allowed to: aren't allowed to (never don't allowed).", "noteHu": "be allowed to: aren't allowed to, soha nem don't allowed.", "lesson": "L93"}, {"front": "You should going to the market on Saturday.", "back": "You should go to the market on Saturday.", "note": "After should, use the base form of the verb.", "noteHu": "A should után az ige alapalakja áll.", "lesson": "L97-98"}, {"front": "I'd recommend to take the metro.", "back": "I'd recommend taking the metro.", "note": "recommend + -ing, not to + verb.", "noteHu": "A recommend után -ing alak áll, nem to + ige.", "lesson": "L97-99"}, {"front": "In average, I have ten meetings a week.", "back": "On average, I have ten meetings a week.", "note": "We say on average.", "noteHu": "Átlagosan = on average.", "lesson": "L97-98"}]}, {"id": "grammar", "title": "Grammar choice", "titleHu": "Nyelvtani választás", "cards": [{"front": "My manager ___ in the Budapest office. (work / works)", "back": "My manager works in the Budapest office.", "note": "he / she / it + verb + -s.", "noteHu": "Egyes szám 3. személyben az ige -s-t kap.", "lesson": "L17-18"}, {"front": "___ your colleagues speak German? (Do / Does)", "back": "Do your colleagues speak German?", "note": "Plural subject (they) → Do.", "noteHu": "Többes számú alanynál: Do.", "lesson": "L16-18"}, {"front": "Please be quiet. The baby ___. (sleeps / is sleeping)", "back": "Please be quiet. The baby is sleeping.", "note": "An action happening now → present continuous.", "noteHu": "Most zajló cselekvés: folyamatos jelen.", "lesson": "L7-9"}, {"front": "Look at those dark clouds! It ___ rain. (will / is going to)", "back": "Look at those dark clouds! It's going to rain.", "note": "We can see it coming now → going to.", "noteHu": "Látható jelekből jóslás: going to.", "lesson": "L10"}, {"front": "There ___ two printers in our office. (is / are)", "back": "There are two printers in our office.", "note": "Plural → there are.", "noteHu": "Többes számnál: there are.", "lesson": "L28"}, {"front": "Sorry, we haven't got ___ milk. (some / any)", "back": "Sorry, we haven't got any milk.", "note": "In negatives → any.", "noteHu": "Tagadásban: any.", "lesson": "L28"}, {"front": "My parents ___ at home yesterday evening. (was / were)", "back": "My parents were at home yesterday evening.", "note": "Plural subject → were.", "noteHu": "Többes számú alanynál: were.", "lesson": "L20-21, L41-42"}, {"front": "Where ___ you go on holiday last year? (did / were)", "back": "Where did you go on holiday last year?", "note": "Past simple question: did + base form.", "noteHu": "Múlt idejű kérdés: did + alapalak.", "lesson": "L34, L41-42"}, {"front": "I usually go to the office ___ bus. (by / with)", "back": "I usually go to the office by bus.", "note": "Transport: by bus, by car, by train.", "noteHu": "Járművel: by bus, by car, by train.", "lesson": "L1, L34"}, {"front": "She's a very good employee. She works ___. (hard / hardly)", "back": "She's a very good employee. She works hard.", "note": "hard = with a lot of effort; hardly = almost not.", "noteHu": "hard = keményen; hardly = alig.", "lesson": "L37"}, {"front": "We arrived ___ Vienna late in the evening. (in / at)", "back": "We arrived in Vienna late in the evening.", "note": "Cities and countries → arrive in.", "noteHu": "Városnál, országnál: arrive in.", "lesson": "L43-44"}, {"front": "I want ___ me with this report. (you to help / that you help)", "back": "I want you to help me with this report.", "note": "want + person + to + verb.", "noteHu": "want + személy + to + ige.", "lesson": "L20-21, L60"}, {"front": "My new laptop is ___ than my old one. (faster / more fast)", "back": "My new laptop is faster than my old one.", "note": "Short adjective → -er + than.", "noteHu": "Rövid melléknév: -er + than.", "lesson": "L61"}, {"front": "This is the ___ restaurant in town. Everybody loves it. (best / better)", "back": "This is the best restaurant in town. Everybody loves it.", "note": "good – better – the best.", "noteHu": "good – better – the best (felsőfok).", "lesson": "L61"}, {"front": "Sorry, we don't have ___ time today. (much / many)", "back": "Sorry, we don't have much time today.", "note": "Uncountable (time, money) → much.", "noteHu": "Megszámlálhatatlan főnévnél: much.", "lesson": "L46-59"}, {"front": "Are you free ___ Friday afternoon? (on / in)", "back": "Are you free on Friday afternoon?", "note": "Days → on.", "noteHu": "Napoknál: on.", "lesson": "L63-65"}, {"front": "I never work ___ the weekend. (at / in)", "back": "I never work at the weekend.", "note": "British English: at the weekend.", "noteHu": "Brit angolban: at the weekend.", "lesson": "L65"}, {"front": "This month I ___ in our Vienna office. (work / am working)", "back": "This month I am working in our Vienna office.", "note": "A temporary situation (this month) → present continuous.", "noteHu": "Átmeneti helyzet (this month): folyamatos jelen.", "lesson": "L73-74"}, {"front": "The documents ___ to the client yesterday. (sent / were sent)", "back": "The documents were sent to the client yesterday.", "note": "Passive: were + 3rd form (plural).", "noteHu": "Szenvedő szerkezet: were + 3. alak (többes szám).", "lesson": "L75"}, {"front": "Can you send ___, please? (it to me / me it)", "back": "Can you send it to me, please?", "note": "With it: verb + it + to + person.", "noteHu": "Az it névmásnál: send it to me.", "lesson": "L66, L71-72"}, {"front": "They ___ come to the party, but I'm not sure. (might / might to)", "back": "They might come to the party, but I'm not sure.", "note": "might + verb, without to.", "noteHu": "A might után nincs to.", "lesson": "L79, L83-84"}, {"front": "You ___ use your phone during the exam. It's forbidden. (mustn't / don't have to)", "back": "You mustn't use your phone during the exam. It's forbidden.", "note": "Forbidden → mustn't. Not necessary → don't have to.", "noteHu": "Tilos: mustn't. Nem kell: don't have to.", "lesson": "L88-90"}, {"front": "My boss ___ work at weekends. (doesn't have to / don't have to)", "back": "My boss doesn't have to work at weekends.", "note": "he / she → doesn't have to.", "noteHu": "Egyes szám 3. személyben: doesn't have to.", "lesson": "L90-92"}, {"front": "I like ___ to music in the car. (listening / listen)", "back": "I like listening to music in the car.", "note": "like / enjoy + -ing.", "noteHu": "A like és az enjoy után -ing alak áll.", "lesson": "L94-95"}, {"front": "This cup is dirty. Can I have a clean ___? (one / it)", "back": "This cup is dirty. Can I have a clean one?", "note": "one = another thing of the same kind.", "noteHu": "one = egy másik ugyanolyan dolog.", "lesson": "L96"}, {"front": "Is this your pen? – Yes, it's ___. (my / mine)", "back": "Is this your pen? – Yes, it's mine.", "note": "No noun after it → mine.", "noteHu": "Ha nem követi főnév: mine.", "lesson": "L96"}, {"front": "Your coat is wet. You can hang ___ in the hall. (it up / up it)", "back": "Your coat is wet. You can hang it up in the hall.", "note": "Pronoun (it, them) goes in the middle: hang it up.", "noteHu": "A névmás középre kerül: hang it up.", "lesson": "L94-96"}, {"front": "Costs went up ___ $20,000 to $120,000. (by / at)", "back": "Costs went up by $20,000 to $120,000.", "note": "by = the size of the change; to = the new number.", "noteHu": "by = a változás mértéke; to = az új érték.", "lesson": "L82-84"}, {"front": "I'd recommend ___ the boat trip at sunset. (taking / to take)", "back": "I'd recommend taking the boat trip at sunset.", "note": "I'd recommend + -ing.", "noteHu": "Az I'd recommend után -ing alak áll.", "lesson": "L99"}, {"front": "Next year you ___ speak English much better. (could / will be able to)", "back": "Next year you will be able to speak English much better.", "note": "Future ability → will be able to.", "noteHu": "Jövőbeli képesség: will be able to.", "lesson": "L99"}]}, {"id": "qa", "title": "Quick questions", "titleHu": "Gyors kérdések", "cards": [{"front": "What do you do?", "back": "I'm a team leader. I work for an insurance company.", "note": "What do you do? = What's your job?", "lesson": "L1, L19"}, {"front": "What time do you start work?", "back": "I usually start at eight o'clock.", "lesson": "L2-3"}, {"front": "How long does it take you to get to work?", "back": "It takes me about forty minutes.", "note": "It takes me + time.", "lesson": "L1, L20-21"}, {"front": "How many e-mails do you get a day?", "back": "I get about fifty e-mails a day.", "note": "How many + plural noun … a day?", "lesson": "L5-6"}, {"front": "Do you like your job?", "back": "Yes, I do.", "note": "Do you …? → Yes, I do. / No, I don't.", "lesson": "L16"}, {"front": "Are you tired today?", "back": "No, I'm not.", "note": "Are you …? → Yes, I am. / No, I'm not.", "lesson": "L16"}, {"front": "What time is it? (2:45)", "back": "It's quarter to three.", "note": "American English: two forty-five.", "lesson": "L20-22, L27"}, {"front": "When is your birthday?", "back": "It's on the twelfth of May.", "note": "on + date; say the ordinal number.", "lesson": "L25-27"}, {"front": "Is there a printer in your office?", "back": "Yes, there is. / No, there isn't.", "lesson": "L28-29"}, {"front": "Where did you go on holiday last summer?", "back": "I went to Greece with my family.", "note": "Past simple: go → went.", "lesson": "L41-42"}, {"front": "How did you travel there?", "back": "We went by car.", "note": "by car / by plane – but on foot.", "lesson": "L34, L40"}, {"front": "Excuse me, is there a bank near here?", "back": "Yes. Go straight on and take the first street on the left. It's on your right.", "lesson": "L45"}, {"front": "Would you like something to drink?", "back": "Yes, please. A glass of water. / I'm OK, thanks.", "lesson": "L60"}, {"front": "Have you been to Italy?", "back": "Yes, I have. / No, I haven't.", "lesson": "L61, L68"}, {"front": "Are you free on Friday afternoon?", "back": "Sorry, I'm busy on Friday. What about Monday?", "note": "free on / busy on + day.", "lesson": "L63-64"}, {"front": "Did you work yesterday?", "back": "Yes, I did. / No, I didn't.", "note": "Did you …? → Yes, I did. / No, I didn't.", "lesson": "L65"}, {"front": "What are you wearing today?", "back": "I'm wearing jeans and a pullover.", "note": "Now → present continuous.", "lesson": "L66"}, {"front": "What do you do when you are stressed?", "back": "I take a break and have a coffee.", "lesson": "L76-77"}, {"front": "Can you use chopsticks?", "back": "Yes, I can. / No, I can't.", "note": "Can you …? → Yes, I can. / No, I can't.", "lesson": "L88-90"}, {"front": "May I join you?", "back": "Yes, of course.", "note": "May I …? = a very polite Can I …?", "lesson": "L88-90"}, {"front": "Do you have to wear a suit at work?", "back": "No, I don't. / Yes, I do.", "note": "Do you have to …? → Yes, I do. / No, I don't.", "lesson": "L90-92"}, {"front": "What do you like doing at the weekend?", "back": "I like going hiking and spending time with my family.", "note": "like + -ing.", "lesson": "L94-95"}, {"front": "I don't like telemarketers.", "back": "Nor do I. / Me neither.", "note": "Agreeing with a negative: Nor do I.", "lesson": "L97-98"}, {"front": "What percentage of your work is in English?", "back": "About ten per cent.", "lesson": "L97-98"}, {"front": "Can you recommend a good restaurant?", "back": "I'd recommend the fish restaurant by the river.", "note": "I'd recommend + noun / + -ing.", "lesson": "L97-99"}]}]};
+const PICS = [{"img": "pic-passport.jpg", "back": "a passport", "hu": "útlevél", "topic": "Travel", "credit": "Abdulrahman.Abbadi96 · CC BY-SA 4.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Brazilian_Passport_Cover.jpg"}, {"img": "pic-taxi.jpg", "back": "a taxi", "hu": "taxi", "topic": "Travel", "credit": "Thomas R Machnitzki · CC BY 3.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Yellow_Cab_taxi_Memphis_TN_001.jpg"}, {"img": "pic-train.jpg", "back": "a train", "hu": "vonat", "topic": "Travel", "credit": "Chris Olszewski · CC BY-SA 4.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:PKP_Intercity_train_at_Krak%C3%B3w_G%C5%82%C3%B3wny_train_station%2C_Poland%2C_2019.jpg"}, {"img": "pic-printer.jpg", "back": "a printer", "hu": "nyomtató", "topic": "Office", "credit": "Solomon203 · CC BY-SA 4.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Sharp_MX-M465_of_Aurora_Office_Equipment_20161029.jpg"}, {"img": "pic-mobile-phone.jpg", "back": "a mobile phone", "hu": "mobiltelefon", "topic": "Office", "credit": "Dennis Cortés · CC0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Black_smartphone_in_hand_%28Unsplash%29.jpg"}, {"img": "pic-light-bulb.jpg", "back": "a lightbulb", "hu": "villanykörte", "topic": "Hotel", "credit": "KMJ · CC BY-SA 3.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Gluehlampe_01_KMJ.jpg"}, {"img": "pic-credit-card.jpg", "back": "a credit card", "hu": "bankkártya, hitelkártya", "topic": "Money", "credit": "Petr Kratochvil · CC0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Three_credit_cards-_Visa%2C_Mastercard_and_American_Express_%28close-up_on_logos%29.jpg"}, {"img": "pic-escalator.jpg", "back": "an escalator", "hu": "mozgólépcső", "topic": "Hotel", "credit": "Stig Nygaard · CC BY 2.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Copenhagen_Metro_escalators.jpg"}, {"img": "pic-yacht.jpg", "back": "a yacht", "hu": "jacht, vitorlás", "topic": "Travel", "credit": "Liridon · CC BY-SA 4.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Sailing_boat_at_sunset%2C_Ionian_Sea%2C_Albania.jpg"}, {"img": "pic-pills.jpg", "back": "pills", "hu": "tabletták", "topic": "Health", "credit": "Pöllö · CC BY 3.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Medicine_cocktail_tablets_and_pills_in_glass.jpg"}, {"img": "pic-chewing-gum.jpg", "back": "chewing gum", "hu": "rágógumi", "topic": "Everyday", "credit": "Pascua Theus · CC BY-SA 2.5 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Kaugummis.jpg"}, {"img": "pic-calendar.jpg", "back": "a calendar", "hu": "naptár", "topic": "Office", "credit": "Claudio Elias · Public domain · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:WallCalendar.jpg"}, {"img": "pic-coffee.jpg", "back": "a cup of coffee", "hu": "egy csésze kávé", "topic": "Restaurant", "credit": "Julius Schorzman · CC BY-SA 2.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:A_small_cup_of_coffee.JPG"}, {"img": "pic-bicycle.jpg", "back": "a bicycle", "hu": "kerékpár", "topic": "Travel", "credit": "Basile Morin · CC BY-SA 4.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Parked_bicycle_with_graffitied_building_facade_and_doors_in_Amsterdam.jpg"}, {"img": "pic-ship.jpg", "back": "a ship", "hu": "hajó", "topic": "Travel", "credit": "Jakub Hałun · CC BY 4.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Cruise_ship_in_the_Port_of_Nagasaki%2C_20240814_0829_3199.jpg"}, {"img": "pic-cheese.jpg", "back": "cheese", "hu": "sajt", "topic": "Restaurant", "credit": "Yann Forget · CC BY-SA 4.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Soubois%2C_WikiCheese_Lausanne%2C_10-2016.jpg"}, {"img": "pic-steak.jpg", "back": "a steak", "hu": "steak", "topic": "Restaurant", "credit": "Alex Munsell · CC0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Steak_Dinner_1_%28Unsplash%29.jpg"}, {"img": "pic-battery.jpg", "back": "batteries", "hu": "elem", "topic": "Office", "credit": "ajay_suresh · CC BY 2.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:AA_Batteries_%2851825378856%29.jpg"}, {"img": "pic-glasses.jpg", "back": "glasses", "hu": "szemüveg", "topic": "Everyday", "credit": "Clem Onojeghuo · CC0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Elegant_glasses_%28Unsplash%29.jpg"}, {"img": "pic-watch.jpg", "back": "a watch", "hu": "karóra", "topic": "Everyday", "credit": "Cvmontuy · CC BY-SA 4.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Fossil_wristwatch_with_white_background.jpg"}, {"img": "pic-towel.jpg", "back": "a towel", "hu": "törölköző", "topic": "Hotel", "credit": "Brandon.wiggins · CC BY-SA 3.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Stacks-of-gym-towels-on-wood-bench.jpg"}, {"img": "pic-pillow.jpg", "back": "a pillow", "hu": "párna", "topic": "Hotel", "credit": "0hAerqplane · CC BY-SA 4.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:An_average_white_pillow.jpg"}, {"img": "pic-hairdryer.jpg", "back": "a hairdryer", "hu": "hajszárító", "topic": "Hotel", "credit": "Dinkun Chen · CC BY-SA 4.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:HITACHI_HAIR_DRYER_HD-1650.jpg"}, {"img": "pic-lift.jpg", "back": "a lift (AmE: elevator)", "hu": "lift", "topic": "Hotel", "credit": "Pjotr Mahhonin · CC BY-SA 4.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Hotel_Mediterranean_Otis_Lift_Scoreboard_Rhodes_5_August_2025.jpg"}, {"img": "pic-stairs.jpg", "back": "stairs", "hu": "lépcső", "topic": "Hotel", "credit": "Basile Morin · CC BY-SA 4.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Symmetric_view_of_the_staircase_at_The_Fullerton_Hotel_Singapore.jpg"}, {"img": "pic-suitcase.jpg", "back": "a suitcase", "hu": "bőrönd", "topic": "Travel", "credit": "Sandrine Z · CC BY-SA 4.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Belber_Striped_Suitcase.jpg"}, {"img": "pic-lamp.jpg", "back": "a lamp", "hu": "lámpa", "topic": "Hotel", "credit": "LoMit · CC BY-SA 4.0 · Wikimedia Commons", "source": "https://commons.wikimedia.org/wiki/File:Lamp_with_a_lampshade_illuminated_by_sunlight.jpg"}];
+
+const SETS = [
+  {id:'pictures', title:'Pictures', hu:'Képes szókártyák', hint:'What is it in English?', hintHu:'Mi ez angolul?'},
+  {id:'hu-en', title:'Hungarian → English', hu:'Magyarról angolra', hint:'Say it in English', hintHu:'Mondd angolul'},
+  {id:'definition', title:"What's the word?", hu:'Mi a szó?', hint:'Which word is it?', hintHu:'Melyik szó ez?'},
+  {id:'mistakes', title:'Find the mistake', hu:'Keresd a hibát', hint:'Find the mistake and correct it', hintHu:'Keresd meg és javítsd a hibát'},
+  {id:'grammar', title:'Grammar choice', hu:'Nyelvtani választás', hint:'Choose the right word', hintHu:'Válaszd ki a helyes szót'},
+  {id:'qa', title:'Quick questions', hu:'Gyors kérdések', hint:'Answer the question', hintHu:'Válaszolj a kérdésre'},
+  {id:'mix', title:'Mix of everything', hu:'Mindenből egy kicsit', hint:'', hintHu:''}
+];
+
+// build card lists
+const bySet = {};
+DATA.sets.forEach(s => { bySet[s.id] = s.cards.map((c,i) => ({...c, set:s.id, key:s.id+':'+i})); });
+bySet.pictures = PICS.map((c,i) => ({...c, set:'pictures', key:'pictures:'+i}));
+const MIX_SIZE = 40;
+
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem('atotal-fc:'+k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem('atotal-fc:'+k, JSON.stringify(v)); }catch(e){} }
+};
+let known = new Set(store.get('known', []));
+let state = { set: store.get('set','pictures'), topic:'all', swapped:false, queue:[], cur:null, flipped:false };
+if (!SETS.some(s => s.id === state.set)) state.set = 'pictures';
+
+const $ = id => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+function pool(){
+  if (state.set === 'mix') {
+    let m = store.get('mixdeck', null);
+    const all = Object.keys(bySet).flatMap(k => bySet[k]);
+    if (!m || !m.every(k => all.some(c => c.key === k))) { m = shuffle(all.map(c => c.key)).slice(0, MIX_SIZE); store.set('mixdeck', m); }
+    return m.map(k => all.find(c => c.key === k));
+  }
+  const cards = bySet[state.set] || [];
+  return state.topic === 'all' ? cards : cards.filter(c => c.topic === state.topic);
+}
+
+function renderSets(){
+  const box = $('sets'); box.textContent = '';
+  SETS.forEach(s => {
+    const b = el('button', 'set'); b.type = 'button'; b.setAttribute('aria-pressed', String(state.set === s.id));
+    b.append(el('b', '', s.title), el('span', 'hu', s.hu));
+    const cards = s.id === 'mix' ? null : bySet[s.id];
+    const m = el('div', 'meter'); const i = el('i'); m.append(i);
+    const small = el('small');
+    if (cards) { const k = cards.filter(c => known.has(c.key)).length; i.style.width = (100 * k / cards.length) + '%'; small.textContent = k + ' / ' + cards.length + ' known'; }
+    else { small.textContent = MIX_SIZE + ' random cards'; i.style.width = '0'; }
+    b.append(m, small);
+    b.addEventListener('click', () => { state.set = s.id; state.topic = 'all'; state.swapped = false; store.set('set', s.id); start(); });
+    box.append(b);
+  });
+}
+
+function renderTopics(){
+  const box = $('topics'); box.textContent = '';
+  const cards = bySet[state.set];
+  if (!cards || state.set === 'mix') return;
+  const topics = [...new Set(cards.map(c => c.topic).filter(Boolean))];
+  if (topics.length < 2) return;
+  ['all', ...topics].forEach(t => {
+    const b = el('button', 'chip', t === 'all' ? 'All topics' : t); b.type = 'button';
+    b.setAttribute('aria-pressed', String(state.topic === t));
+    b.addEventListener('click', () => { state.topic = t; start(); });
+    box.append(b);
+  });
+}
+
+function start(reshuffle = true){
+  const p = pool();
+  state.queue = p.filter(c => !known.has(c.key));
+  if (reshuffle) shuffle(state.queue);
+  $('swap').hidden = !['pictures','hu-en','definition'].includes(state.set);
+  renderSets(); renderTopics(); next();
+}
+
+function progress(){
+  const p = pool(); const k = p.filter(c => known.has(c.key)).length;
+  $('known').textContent = k; $('total').textContent = p.length;
+  $('trackbar').style.width = (p.length ? 100 * k / p.length : 0) + '%';
+  $('left').textContent = state.queue.length ? state.queue.length + ' to go · még ' + state.queue.length : '';
+}
+
+function setMeta(c){ return SETS.find(s => s.id === c.set); }
+
+function face(side, c){
+  const f = $(side); f.textContent = '';
+  const meta = setMeta(c);
+  const top = el('div', 'kind');
+  const tag = el('span', 'tag', side === 'front' ? (state.set === 'mix' ? meta.title : (c.topic || meta.title)) : 'Answer · Megoldás');
+  top.append(tag, el('span', 'lesson', c.lesson ? 'Lesson ' + c.lesson.replace(/^L/, '').replace(/, L/g, ', ') : ''));
+  const body = el('div', 'body');
+  const swapped = state.swapped && ['pictures','hu-en','definition'].includes(c.set);
+  if (side === 'front') {
+    if (c.set === 'pictures' && !swapped) { const img = el('img', 'pic'); img.src = 'img/' + c.img; img.alt = 'Picture to name'; body.append(img); }
+    else if (c.set === 'pictures') body.append(el('div', 'big', c.back));
+    else if (c.set === 'hu-en') body.append(el('div', 'big', swapped ? c.back : c.front));
+    else if (c.set === 'definition') body.append(el('div', swapped ? 'big' : 'mid', swapped ? c.back : c.front));
+    else if (c.set === 'mistakes') body.append(el('div', 'mid', c.front));
+    else body.append(el('div', 'mid', c.front));
+    const h = el('div', 'hint');
+    const hint = swapped ? (c.set === 'pictures' ? 'Can you picture it? What is it in Hungarian?' : c.set === 'hu-en' ? 'What is it in Hungarian?' : 'What does it mean?') : meta.hint;
+    const hintHu = swapped ? (c.set === 'definition' ? 'Mit jelent?' : 'Mi ez magyarul?') : meta.hintHu;
+    h.append(document.createTextNode(hint + ' · '), el('span', 'hu', hintHu));
+    body.append(h);
+  } else {
+    if (c.set === 'pictures') {
+      if (swapped) { const img = el('img', 'pic'); img.src = 'img/' + c.img; img.alt = c.back; body.append(img); }
+      body.append(el('div', 'big', c.back), el('div', 'hu', c.hu));
+      const cr = el('div', 'credit'); const a = el('a', '', c.credit); a.href = c.source; a.target = '_blank'; a.rel = 'noopener'; cr.append('Photo: ', a); body.append(cr);
+    } else if (c.set === 'hu-en' || c.set === 'definition') {
+      body.append(el('div', 'big', swapped ? c.front : c.back));
+      if (c.example) body.append(el('div', 'ex', c.example));
+    } else if (c.set === 'mistakes') {
+      body.append(el('div', 'mid wrong', c.front), el('div', 'mid', c.back));
+      if (c.note) { const n = el('div', 'note', c.note); if (c.noteHu) n.append(el('span', 'hu', c.noteHu)); body.append(n); }
+    } else {
+      body.append(el('div', 'mid', c.back));
+      if (c.note) { const n = el('div', 'note', c.note); if (c.noteHu) n.append(el('span', 'hu', c.noteHu)); body.append(n); }
+    }
+  }
+  f.append(top, body);
+}
+
+function renderAnswer(){
+  const a = $('answer'); a.textContent = '';
+  if (!state.cur) return;
+  if (!state.flipped) {
+    const b = el('button', 'btn flip'); b.type = 'button'; b.append('Show the answer', el('small', '', 'Mutasd a választ'));
+    b.addEventListener('click', flip); a.append(b);
+  } else {
+    const again = el('button', 'btn again'); again.type = 'button'; again.append('Again', el('small', '', 'Még egyszer'));
+    const knowB = el('button', 'btn know'); knowB.type = 'button'; knowB.append('I know it', el('small', '', 'Tudom'));
+    again.addEventListener('click', () => answer(false)); knowB.addEventListener('click', () => answer(true));
+    a.append(again, knowB);
+  }
+}
+
+function next(){
+  const card = $('card');
+  state.flipped = false; card.style.transition = 'none'; card.classList.remove('flipped'); void card.offsetWidth; card.style.transition = '';
+  state.cur = state.queue[0] || null;
+  $('scene').hidden = !state.cur; $('answer').hidden = !state.cur; $('done').hidden = !!state.cur;
+  if (state.cur) { face('front', state.cur); face('back', state.cur); }
+  else {
+    const n = pool().length;
+    $('doneText').textContent = 'You know all ' + n + ' cards in this set.';
+  }
+  renderAnswer(); progress();
+}
+
+function flip(){
+  if (!state.cur) return;
+  state.flipped = !state.flipped; $('card').classList.toggle('flipped', state.flipped); renderAnswer();
+}
+
+function answer(ok){
+  const c = state.queue.shift(); if (!c) return;
+  if (ok) { known.add(c.key); store.set('known', [...known]); }
+  else { const pos = Math.min(state.queue.length, 3 + Math.floor(Math.random() * 3)); state.queue.splice(pos, 0, c); }
+  renderSets(); next();
+}
+
+$('card').addEventListener('click', e => { if (e.target.closest('a')) return; flip(); });
+document.addEventListener('keydown', e => {
+  if (e.target.closest('input,textarea')) return;
+  if (e.key === ' ' || e.key === 'Enter') { if (e.target.closest('button:not(#card)') ) return; e.preventDefault(); flip(); }
+  else if (e.key === 'ArrowRight' && state.flipped) answer(true);
+  else if (e.key === 'ArrowLeft' && state.flipped) answer(false);
+});
+$('swap').addEventListener('click', () => { state.swapped = !state.swapped; $('swap').setAttribute('aria-pressed', String(state.swapped)); next(); });
+$('shuffle').addEventListener('click', () => { shuffle(state.queue); next(); });
+function resetSet(){
+  pool().forEach(c => known.delete(c.key)); store.set('known', [...known]);
+  if (state.set === 'mix') store.set('mixdeck', null);
+  start();
+}
+$('reset').addEventListener('click', resetSet);
+$('again-all').addEventListener('click', resetSet);
+
+const cl = $('credits');
+PICS.forEach(p => { const li = el('li'); const a = el('a', '', p.back + ': ' + p.credit); a.href = p.source; a.target = '_blank'; a.rel = 'noopener'; a.style.color = 'inherit'; li.append(a); cl.append(li); });
+
+start();
+</script>
+
+</body>
+</html>
