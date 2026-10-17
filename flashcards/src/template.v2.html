@@ -1,0 +1,355 @@
+<title>__TITLE__</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: one study column — set picker on top, one big card in the middle, the two answer buttons under it */
+:root{
+  --crimson:#B90541; --crimson-dark:#8F0433; --crimson-tint:#FBEAF0;
+  --ink:#27272A; --ink2:#3F3F46; --muted:#71717A; --rule:#E4E4E7;
+  --panel:#F4F4F5; --page:#FAFAFA; --card:#FFFFFF; --plate:#FFFFFF;
+  --ok:#00736B; --ok-bg:#E2F2EF; --again:#B42318; --again-bg:#FDECEA;
+  --blue:#1A4079; --blue-bg:#E8EDF5;
+  --shadow:0 1px 2px rgba(39,39,42,.06),0 8px 24px rgba(39,39,42,.08);
+  --font:"Montserrat",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --crimson:#F0507D; --crimson-dark:#FF7A9C; --crimson-tint:#3A1220;
+  --ink:#F4F4F5; --ink2:#D4D4D8; --muted:#A1A1AA; --rule:#3F3F46;
+  --panel:#27272A; --page:#18181B; --card:#202023; --plate:#FFFFFF;
+  --ok:#4CC2B4; --ok-bg:#12302C; --again:#F2877C; --again-bg:#3A1A17;
+  --blue:#8FB0E8; --blue-bg:#1B2536;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --crimson:#F0507D; --crimson-dark:#FF7A9C; --crimson-tint:#3A1220;
+  --ink:#F4F4F5; --ink2:#D4D4D8; --muted:#A1A1AA; --rule:#3F3F46;
+  --panel:#27272A; --page:#18181B; --card:#202023; --plate:#FFFFFF;
+  --ok:#4CC2B4; --ok-bg:#12302C; --again:#F2877C; --again-bg:#3A1A17;
+  --blue:#8FB0E8; --blue-bg:#1B2536;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35); color-scheme:dark}
+[hidden]{display:none!important}
+/*__BRAND_CSS__*/
+html,body{background:var(--page)}
+body{color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-block:18px 4px;border-bottom:3px solid var(--crimson)}
+.logo{background:var(--plate);border-radius:8px;padding:6px 10px;display:flex}
+.logo img{height:38px;width:auto;display:block}
+.ttl{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ttl h1{margin:0;font-size:clamp(22px,4vw,30px);font-weight:800;letter-spacing:-.01em;text-wrap:balance}
+.ttl p{margin:0;color:var(--muted);font-size:14px}
+.hu{color:var(--muted);font-size:.86em;font-weight:500}
+.label{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* set picker */
+.sets{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,135px),1fr));gap:10px}
+.set{font:inherit;text-align:left;cursor:pointer;background:var(--card);color:var(--ink);border:1.5px solid var(--rule);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.set:hover{border-color:var(--muted)}
+.set[aria-pressed="true"]{border-color:var(--crimson);background:var(--crimson-tint)}
+.set:focus-visible,.chip:focus-visible,.btn:focus-visible,.card:focus-visible,.tool:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.set b{font-size:15px;font-weight:700;line-height:1.25}
+.set .hu{font-size:12.5px}
+.meter{height:5px;border-radius:3px;background:var(--panel);overflow:hidden;margin-top:6px}
+.meter i{display:block;height:100%;background:var(--ok);width:0;transition:width .3s}
+.set small{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{font:inherit;font-size:13px;font-weight:600;cursor:pointer;border-radius:999px;padding:6px 12px;border:1.5px solid var(--rule);background:transparent;color:var(--ink2)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--page);border-color:var(--ink)}
+.spacer{flex:1}
+.tool{font:inherit;font-size:13px;font-weight:600;cursor:pointer;border:0;background:var(--panel);color:var(--ink2);border-radius:8px;padding:7px 12px}
+.tool:hover{color:var(--ink)}
+
+/* the study area */
+.study{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;justify-items:center}
+.progress{width:100%;max-width:760px;display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-variant-numeric:tabular-nums}
+.progress .count{font-weight:700}
+.track{width:100%;max-width:760px;height:8px;border-radius:4px;background:var(--panel);overflow:hidden}
+.track i{display:block;height:100%;width:0;background:var(--ok);transition:width .35s}
+.scene{width:100%;max-width:760px;perspective:1400px}
+.card{position:relative;width:100%;min-height:360px;cursor:pointer;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.2,.7,.2,1);border-radius:16px;outline:none}
+.card.flipped{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--card);border-radius:16px;box-shadow:var(--shadow);border:1px solid var(--rule);display:flex;flex-direction:column;padding:22px 26px;gap:12px;overflow:auto}
+.back{transform:rotateY(180deg);border-top:6px solid var(--ok)}
+.front{border-top:6px solid var(--crimson)}
+.face .kind{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.face .body{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:12px;min-height:0}
+.big{font-size:clamp(22px,4.4vw,34px);font-weight:700;line-height:1.25;text-wrap:balance;max-width:30ch}
+.mid{font-size:clamp(18px,3.2vw,24px);font-weight:600;line-height:1.35;text-wrap:balance;max-width:36ch}
+.wrong{text-decoration:line-through;text-decoration-color:var(--again);text-decoration-thickness:2px;color:var(--muted)}
+.note{background:var(--panel);border-radius:10px;padding:10px 14px;font-size:15px;max-width:52ch;text-align:left}
+.note .hu{display:block;margin-top:2px}
+.ex{font-style:italic;color:var(--ink2);font-size:16px;max-width:52ch}
+.pic{width:100%;max-width:440px;aspect-ratio:4/3;object-fit:contain;border-radius:10px;background:var(--panel);max-height:260px}
+.credit{font-size:11px;color:var(--muted)}
+.credit a{color:inherit}
+.hint{font-size:13px;color:var(--muted)}
+.lesson{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tag{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:6px;background:var(--crimson-tint);color:var(--crimson)}
+.back .tag{background:var(--ok-bg);color:var(--ok)}
+
+.answer{width:100%;max-width:760px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn{font:inherit;cursor:pointer;border-radius:12px;padding:14px 10px;font-size:17px;font-weight:700;border:2px solid transparent;display:flex;flex-direction:column;align-items:center;gap:0;line-height:1.2}
+.btn small{font-size:12.5px;font-weight:500;opacity:.85}
+.btn.again{background:var(--again-bg);color:var(--again);border-color:var(--again)}
+.btn.know{background:var(--ok-bg);color:var(--ok);border-color:var(--ok)}
+.btn.flip{grid-column:1/-1;background:var(--crimson);color:#FFFFFF}
+.btn.flip small{color:#FFFFFF}
+.keys{font-size:12.5px;color:var(--muted);text-align:center}
+.done{width:100%;max-width:760px;background:var(--card);border-radius:16px;border:1px solid var(--rule);box-shadow:var(--shadow);padding:34px 26px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+.done h2{margin:0;font-size:28px;font-weight:800}
+details.credits{font-size:13px;color:var(--muted);max-width:760px;margin:0 auto;width:100%}
+details.credits summary{cursor:pointer;font-weight:600}
+details.credits ul{padding-left:18px;columns:2;column-gap:28px}
+@media (max-width:560px){details.credits ul{columns:1}.face{padding:18px 16px}.card{min-height:400px}}
+@media (prefers-reduced-motion: reduce){.card{transition:none}.track i,.meter i{transition:none}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="ttl">
+      <span class="label">__EYEBROW__</span>
+      <h1>__H1__</h1>
+      <p>__SUB__ · <span class="hu">__SUBHU__</span></p>
+    </div>
+    <div class="logo" id="logo" hidden><img id="logoimg" src="" alt=""></div>
+  </header>
+
+  <section aria-labelledby="pick">
+    <div class="label" id="pick" style="margin-bottom:8px">Choose a set · <span class="hu" style="text-transform:none;letter-spacing:0">Válassz egy csomagot</span></div>
+    <div class="sets" id="sets"></div>
+  </section>
+
+  <div class="bar" id="bar">
+    <div class="bar" id="topics"></div>
+    <span class="spacer"></span>
+    <button class="tool" id="swap" type="button" title="Show the other side first">⇄ Swap sides</button>
+    <button class="tool" id="shuffle" type="button">Shuffle · <span class="hu">Keverés</span></button>
+    <button class="tool" id="reset" type="button">Start again · <span class="hu">Újrakezdés</span></button>
+  </div>
+
+  <main class="study" id="study">
+    <div class="progress"><span><span class="count" id="known">0</span> / <span id="total">0</span> known · <span class="hu">tudom</span></span><span class="hint" id="left"></span></div>
+    <div class="track"><i id="trackbar"></i></div>
+    <div class="scene" id="scene">
+      <div class="card" id="card" tabindex="0" role="button" aria-label="Flashcard. Press Space to turn it over.">
+        <div class="face front" id="front"></div>
+        <div class="face back" id="back"></div>
+      </div>
+    </div>
+    <div class="answer" id="answer"></div>
+    <div class="keys">Tap the card to turn it over · <span class="hu">Koppints a kártyára a megfordításhoz</span> · Keys: Space, ← again, → I know it</div>
+    <div class="done" id="done" hidden>
+      <h2>Well done!</h2>
+      <p id="doneText">You know every card in this set.</p>
+      <p class="hu">Szép munka! Ebben a csomagban minden kártyát tudsz.</p>
+      <button class="btn know" id="again-all" type="button" style="min-width:220px">Practise this set again<small>Gyakorold újra</small></button>
+    </div>
+  </main>
+
+  <details class="credits"><summary>Picture credits · Wikimedia Commons</summary><ul id="credits"></ul></details>
+</div>
+
+<script>
+const DECK = __DECK__;
+/* Looks: every kit in brands.json is baked in by build.v2.py (BRAND_KEYS + BRAND_LOGOS + the CSS above); ?brand=<key> switches at run time. 'plain' = 'neutral'. */
+const BRAND_KEYS = __BRAND_KEYS__, BRAND_LOGOS = __BRAND_LOGOS__;
+(function(){
+  let b = DECK.brand;
+  try { let q = new URLSearchParams(location.search).get('brand'); if (q === 'plain') q = 'neutral'; if (BRAND_KEYS.includes(q)) b = q; } catch(e) {}
+  if (!BRAND_KEYS.includes(b)) b = BRAND_KEYS[0];
+  document.documentElement.setAttribute('data-brand', b);
+  const L = BRAND_LOGOS[b];
+  if (L) { document.getElementById('logoimg').src = L[0]; document.getElementById('logoimg').alt = L[1]; document.getElementById('logo').hidden = false; }
+})();
+const DATA = __DATA__;
+const PICS = __PICS__;
+
+const SETS = [
+  {id:'pictures', title:'Pictures', hu:'Képes szókártyák', hint:'What is it in English?', hintHu:'Mi ez angolul?'},
+  {id:'hu-en', title:'Hungarian → English', hu:'Magyarról angolra', hint:'Say it in English', hintHu:'Mondd angolul'},
+  {id:'definition', title:"What's the word?", hu:'Mi a szó?', hint:'Which word is it?', hintHu:'Melyik szó ez?'},
+  {id:'mistakes', title:'Find the mistake', hu:'Keresd a hibát', hint:'Find the mistake and correct it', hintHu:'Keresd meg és javítsd a hibát'},
+  {id:'grammar', title:'Grammar', hu:'Nyelvtan', hint:'Choose the right word', hintHu:'Válaszd ki a helyes szót'},
+  {id:'qa', title:'Quick questions', hu:'Gyors kérdések', hint:'Answer the question', hintHu:'Válaszolj a kérdésre'},
+  {id:'mix', title:'Mix of everything', hu:'Mindenből egy kicsit', hint:'', hintHu:''}
+];
+
+// build card lists
+const bySet = {};
+DATA.sets.forEach(s => { bySet[s.id] = s.cards.map((c,i) => ({...c, set:s.id, key:s.id+':'+i})); });
+bySet.pictures = PICS.map((c,i) => ({...c, set:'pictures', key:'pictures:'+i}));
+const MIX_SIZE = 40;
+
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(DECK.id+':'+k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(DECK.id+':'+k, JSON.stringify(v)); }catch(e){} }
+};
+let known = new Set(store.get('known', []));
+let state = { set: store.get('set','pictures'), topic:'all', swapped:false, queue:[], cur:null, flipped:false };
+if (!SETS.some(s => s.id === state.set)) state.set = 'pictures';
+
+const $ = id => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+function pool(){
+  if (state.set === 'mix') {
+    let m = store.get('mixdeck', null);
+    const all = Object.keys(bySet).flatMap(k => bySet[k]);
+    if (!m || !m.every(k => all.some(c => c.key === k))) { m = shuffle(all.map(c => c.key)).slice(0, MIX_SIZE); store.set('mixdeck', m); }
+    return m.map(k => all.find(c => c.key === k));
+  }
+  const cards = bySet[state.set] || [];
+  return state.topic === 'all' ? cards : cards.filter(c => c.topic === state.topic);
+}
+
+function renderSets(){
+  const box = $('sets'); box.textContent = '';
+  SETS.forEach(s => {
+    const b = el('button', 'set'); b.type = 'button'; b.setAttribute('aria-pressed', String(state.set === s.id));
+    b.append(el('b', '', s.title), el('span', 'hu', s.hu));
+    const cards = s.id === 'mix' ? null : bySet[s.id];
+    const m = el('div', 'meter'); const i = el('i'); m.append(i);
+    const small = el('small');
+    if (cards) { const k = cards.filter(c => known.has(c.key)).length; i.style.width = (100 * k / cards.length) + '%'; small.textContent = k + ' / ' + cards.length + ' known'; }
+    else { small.textContent = MIX_SIZE + ' random cards'; i.style.width = '0'; }
+    b.append(m, small);
+    b.addEventListener('click', () => { state.set = s.id; state.topic = 'all'; state.swapped = false; store.set('set', s.id); start(); });
+    box.append(b);
+  });
+}
+
+function renderTopics(){
+  const box = $('topics'); box.textContent = '';
+  const cards = bySet[state.set];
+  if (!cards || state.set === 'mix') return;
+  const topics = [...new Set(cards.map(c => c.topic).filter(Boolean))];
+  if (topics.length < 2) return;
+  ['all', ...topics].forEach(t => {
+    const b = el('button', 'chip', t === 'all' ? 'All topics' : t); b.type = 'button';
+    b.setAttribute('aria-pressed', String(state.topic === t));
+    b.addEventListener('click', () => { state.topic = t; start(); });
+    box.append(b);
+  });
+}
+
+function start(reshuffle = true){
+  const p = pool();
+  state.queue = p.filter(c => !known.has(c.key));
+  if (reshuffle) shuffle(state.queue);
+  $('swap').hidden = !['pictures','hu-en','definition'].includes(state.set);
+  renderSets(); renderTopics(); next();
+}
+
+function progress(){
+  const p = pool(); const k = p.filter(c => known.has(c.key)).length;
+  $('known').textContent = k; $('total').textContent = p.length;
+  $('trackbar').style.width = (p.length ? 100 * k / p.length : 0) + '%';
+  $('left').textContent = state.queue.length ? state.queue.length + ' to go · még ' + state.queue.length : '';
+}
+
+function setMeta(c){ return SETS.find(s => s.id === c.set); }
+
+function face(side, c){
+  const f = $(side); f.textContent = '';
+  const meta = setMeta(c);
+  const top = el('div', 'kind');
+  const tag = el('span', 'tag', side === 'front' ? (state.set === 'mix' ? meta.title : (c.topic || meta.title)) : 'Answer · Megoldás');
+  top.append(tag, el('span', 'lesson', c.lesson ? 'Lesson ' + c.lesson.replace(/^L/, '').replace(/, L/g, ', ') : ''));
+  const body = el('div', 'body');
+  const swapped = state.swapped && ['pictures','hu-en','definition'].includes(c.set);
+  if (side === 'front') {
+    if (c.set === 'pictures' && !swapped) { const img = el('img', 'pic'); img.src = 'img/' + c.img; img.alt = 'Picture to name'; body.append(img); }
+    else if (c.set === 'pictures') body.append(el('div', 'big', c.back));
+    else if (c.set === 'hu-en') body.append(el('div', 'big', swapped ? c.back : c.front));
+    else if (c.set === 'definition') body.append(el('div', swapped ? 'big' : 'mid', swapped ? c.back : c.front));
+    else if (c.set === 'mistakes') body.append(el('div', 'mid', c.front));
+    else body.append(el('div', 'mid', c.front));
+    const h = el('div', 'hint');
+    const hint = swapped ? (c.set === 'pictures' ? 'Can you picture it? What is it in Hungarian?' : c.set === 'hu-en' ? 'What is it in Hungarian?' : 'What does it mean?') : meta.hint;
+    const hintHu = swapped ? (c.set === 'definition' ? 'Mit jelent?' : 'Mi ez magyarul?') : meta.hintHu;
+    h.append(document.createTextNode(hint + ' · '), el('span', 'hu', hintHu));
+    body.append(h);
+  } else {
+    if (c.set === 'pictures') {
+      if (swapped) { const img = el('img', 'pic'); img.src = 'img/' + c.img; img.alt = c.back; body.append(img); }
+      body.append(el('div', 'big', c.back), el('div', 'hu', c.hu));
+      const cr = el('div', 'credit'); const a = el('a', '', c.credit); a.href = c.source; a.target = '_blank'; a.rel = 'noopener'; cr.append('Photo: ', a); body.append(cr);
+    } else if (c.set === 'hu-en' || c.set === 'definition') {
+      body.append(el('div', 'big', swapped ? c.front : c.back));
+      if (c.example) body.append(el('div', 'ex', c.example));
+    } else if (c.set === 'mistakes') {
+      body.append(el('div', 'mid wrong', c.front), el('div', 'mid', c.back));
+      if (c.note) { const n = el('div', 'note', c.note); if (c.noteHu) n.append(el('span', 'hu', c.noteHu)); body.append(n); }
+    } else {
+      body.append(el('div', 'mid', c.back));
+      if (c.note) { const n = el('div', 'note', c.note); if (c.noteHu) n.append(el('span', 'hu', c.noteHu)); body.append(n); }
+    }
+  }
+  f.append(top, body);
+}
+
+function renderAnswer(){
+  const a = $('answer'); a.textContent = '';
+  if (!state.cur) return;
+  if (!state.flipped) {
+    const b = el('button', 'btn flip'); b.type = 'button'; b.append('Show the answer', el('small', '', 'Mutasd a választ'));
+    b.addEventListener('click', flip); a.append(b);
+  } else {
+    const again = el('button', 'btn again'); again.type = 'button'; again.append('Again', el('small', '', 'Még egyszer'));
+    const knowB = el('button', 'btn know'); knowB.type = 'button'; knowB.append('I know it', el('small', '', 'Tudom'));
+    again.addEventListener('click', () => answer(false)); knowB.addEventListener('click', () => answer(true));
+    a.append(again, knowB);
+  }
+}
+
+function next(){
+  const card = $('card');
+  state.flipped = false; card.style.transition = 'none'; card.classList.remove('flipped'); void card.offsetWidth; card.style.transition = '';
+  state.cur = state.queue[0] || null;
+  $('scene').hidden = !state.cur; $('answer').hidden = !state.cur; $('done').hidden = !!state.cur;
+  if (state.cur) { face('front', state.cur); face('back', state.cur); }
+  else {
+    const n = pool().length;
+    $('doneText').textContent = 'You know all ' + n + ' cards in this set.';
+  }
+  renderAnswer(); progress();
+}
+
+function flip(){
+  if (!state.cur) return;
+  state.flipped = !state.flipped; $('card').classList.toggle('flipped', state.flipped); renderAnswer();
+}
+
+function answer(ok){
+  const c = state.queue.shift(); if (!c) return;
+  if (ok) { known.add(c.key); store.set('known', [...known]); }
+  else { const pos = Math.min(state.queue.length, 3 + Math.floor(Math.random() * 3)); state.queue.splice(pos, 0, c); }
+  renderSets(); next();
+}
+
+$('card').addEventListener('click', e => { if (e.target.closest('a')) return; flip(); });
+document.addEventListener('keydown', e => {
+  if (e.target.closest('input,textarea')) return;
+  if (e.key === ' ' || e.key === 'Enter') { if (e.target.closest('button:not(#card)') ) return; e.preventDefault(); flip(); }
+  else if (e.key === 'ArrowRight' && state.flipped) answer(true);
+  else if (e.key === 'ArrowLeft' && state.flipped) answer(false);
+});
+$('swap').addEventListener('click', () => { state.swapped = !state.swapped; $('swap').setAttribute('aria-pressed', String(state.swapped)); next(); });
+$('shuffle').addEventListener('click', () => { shuffle(state.queue); next(); });
+function resetSet(){
+  pool().forEach(c => known.delete(c.key)); store.set('known', [...known]);
+  if (state.set === 'mix') store.set('mixdeck', null);
+  start();
+}
+$('reset').addEventListener('click', resetSet);
+$('again-all').addEventListener('click', resetSet);
+
+const cl = $('credits');
+PICS.forEach(p => { const li = el('li'); const a = el('a', '', p.back + ': ' + p.credit); a.href = p.source; a.target = '_blank'; a.rel = 'noopener'; a.style.color = 'inherit'; li.append(a); cl.append(li); });
+
+start();
+</script>
