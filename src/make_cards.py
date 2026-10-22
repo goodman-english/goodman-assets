@@ -4,7 +4,8 @@ F='/root/.claude/plugins/synced/e81de710-9b8b-4ec0-a06a-05f593170cdd_e674f652-3c
 SRC='/mnt/user-data/uploads/Claude-exchange/'
 TEAL=(14,131,136); TEAL_D=(10,92,96); CORAL=(251,106,90); BG=(236,247,247)
 cards=[('notes','src-study-notes.jpg','Study Notes'),('practice','src-practice.jpg','Practice Exercises'),
-       ('quiz','src-quiz.jpg','Self-check Quiz'),('workbook','src-workbook.jpg','Workbook')]
+       ('quiz','src-quiz.jpg','Self-check Quiz'),('workbook','src-workbook.jpg','Workbook'),
+       ('flashcards','src-flashcards.jpg','Flashcards')]  # Lesson Follow-up 0.40.0, 22 Oct 2026: Brand Kit flashcards pose
 W,H=480,600; R=36; S=2  # supersample
 def card(slug,src,label):
     w,h=W*S,H*S
@@ -32,9 +33,10 @@ def card(slug,src,label):
     out=f'goodman-card-{slug}.png'
     im.quantize(colors=256,method=Image.Quantize.FASTOCTREE,dither=Image.Dither.FLOYDSTEINBERG).save(out,optimize=True)
     return out
-outs=[card(*c) for c in cards]
+only=sys.argv[1:]  # e.g. python3 make_cards.py flashcards -> build just that card
+outs=[card(*c) for c in cards if not only or c[0] in only]
 ims=[Image.open(o).convert('RGBA') for o in outs]
-sheet=Image.new('RGBA',(W*4+60,H+40),(255,255,255,255))
+sheet=Image.new('RGBA',(W*len(ims)+12*(len(ims)+1),H+40),(255,255,255,255))
 for i,x in enumerate(ims): sheet.alpha_composite(x,(12+i*(W+12),20))
 sheet.convert('RGB').save('preview.jpg',quality=85)
 print(outs)

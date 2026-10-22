@@ -15,6 +15,13 @@ def pict(d, kind, cx, cy, s):
         for i, ln in enumerate([0.75, 0.9, 0.6, 0.85, 0.5]):
             y = y0 + 70*s + i * 26*s
             d.line([(x0 + 26*s, y), (x0 + 26*s + (x1 - x0 - 52*s) * ln, y)], fill=CR, width=7*S)
+    elif kind == 'flashcards':   # 0.40.0: two stacked cards, the front one with "Aa"
+        bx0, by0 = cx - 66*s, cy - 112*s
+        d.rounded_rectangle([bx0, by0, bx0 + 168*s, by0 + 124*s], 14*S, fill=(255, 255, 255), outline=CR, width=lw)
+        x0, y0, x1, y1 = cx - 96*s, cy - 64*s, cx + 76*s, cy + 92*s
+        d.rounded_rectangle([x0, y0, x1, y1], 14*S, fill=TINT, outline=CR, width=lw)
+        fa = ImageFont.truetype(F + 'Montserrat-Bold.ttf', int(72*s))
+        d.text(((x0 + x1) // 2, (y0 + y1) // 2 + 2*s), 'Aa', font=fa, fill=CR, anchor='mm')
     else:                 # clipboard with three ticks
         x0, y0, x1, y1 = cx - 82*s, cy - 96*s, cx + 82*s, cy + 104*s
         d.rounded_rectangle([x0, y0, x1, y1], 14*S, fill=TINT, outline=CR, width=lw)
@@ -45,9 +52,12 @@ def card(slug, label):
     out = os.path.join(os.path.dirname(__file__), '..', 'cards', 'globus-card-%s.png' % slug)
     im.quantize(colors=256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.FLOYDSTEINBERG).save(out, optimize=True)
     return out
-outs = [card('notes', 'Study Notes'), card('test', 'Practice Test')]
+import sys
+ALL = [('notes', 'Study Notes'), ('test', 'Practice Test'), ('flashcards', 'Flashcards')]
+only = sys.argv[1:]   # e.g. python3 make_globus_cards.py flashcards -> build just that card
+outs = [card(k, l) for k, l in ALL if not only or k in only]
 ims = [Image.open(o).convert('RGBA') for o in outs]
-sheet = Image.new('RGBA', (W*2 + 36, H + 40), (240, 240, 240, 255))
+sheet = Image.new('RGBA', (W*len(ims) + 12*(len(ims) + 1), H + 40), (240, 240, 240, 255))
 for i, x in enumerate(ims): sheet.alpha_composite(x, (12 + i*(W + 12), 20))
 sheet.convert('RGB').save('/tmp/globus-cards-preview.jpg', quality=88)
 print(outs)
