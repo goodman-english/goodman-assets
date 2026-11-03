@@ -5,4 +5,4 @@ To redesign a card, overwrite the PNG under the same name. Source script: `src/m
 
 ## explainers/
 Pictures for the Grammar on the Move animated explainers (Lesson Pages). Master copies and the content file live in the private repo `goodman-english/grammar-on-the-move`.
-- `explainers/three-futures/tf-1…7-*.webp`: the cue-card pictures of Three futures (situations 1–7). **Never rename or move**: the live explainer points at these URLs. To change a picture, overwrite it under the same name.
+- `explainers/three-futures/tf-1…7-*.webp` (640 px) and `explainers/three-futures/hd/` (1400 px, used by the big-picture layout): the pictures of Three futures (situations 1–7). **Never rename or move**: the live explainer points at these URLs. To change a picture, overwrite it under the same name.
