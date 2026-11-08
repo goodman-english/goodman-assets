@@ -9,5 +9,5 @@ Pictures for the Grammar on the Move animated explainers (Lesson Pages). Master 
 
 ## voice/
 The Flashcards **voice page** (Hands-free mode with spoken answers). Course Tests pages run inside Google's Apps Script frame, which never allows the microphone, so the flashcards page's "🎤 Answer by voice" button opens `voice/` with the lesson's deck packed into the link's `#part` (never sent to any server). The page holds no lesson content of its own.
-- `voice/index.html` is **built**, do not edit by hand: `python3 voice/src/build_voice.py voice/src/cards.vN.html voice/index.html` (source = the live `cards.vN.html` from Drive › Course Tests › app). Rebuild whenever a new cards version goes live.
+- `voice/index.html` is **built**, do not edit by hand: `python3 voice/src/build_voice.py voice/src/cards.vN.html voice/index.html`. Source = `voice/src/cards.vN.html` (currently v11: v10 + voice-page fixes after the first phone test). Keep it in step with the cards page in Drive › Course Tests › app.
 - Keep the address `voice/` fixed: the live flashcards page points at it.

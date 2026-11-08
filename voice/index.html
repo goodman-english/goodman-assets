@@ -7,6 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Flashcards – voice</title>
 <style id="ct-main-css">
+/* cards.v11 (8 Nov 2026, voice page): after Sándor's first voice test – (1) the front-side answer is no longer echoed back ("I heard: tomato company"
+   looked like a judgement); (2) Say it accepts near misses by sound ("tomato company" ≈ "to meet a company"); (3) after the answer the phone asks
+   "Did you know it? Say: I know it, or again." (the full sentence for the first cards, then just the question).
 /* cards.v10 (8 Nov 2026): Google's Apps Script frame never lets a page use the microphone (tested on Sándor's phone in Samsung Internet and Chrome).
    Here Hands-free therefore reads the cards aloud and the student taps; the box offers "🎤 Answer by voice", which opens the SAME deck on
    the voice page (GitHub Pages: goodman-assets/voice/) – the deck travels in the link's #part, which is never sent to any server.
@@ -976,8 +979,28 @@ function hfParse(said){
   return null;
 }
 /** Did the student say the expression? (Say it round) – loose: every content word of the expression is in what was said. */
+function hfLev(a, b){ const m = a.length, n = b.length; let p = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++){ const q = [i]; for (let j = 1; j <= n; j++) q[j] = Math.min(p[j] + 1, q[j - 1] + 1, p[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); p = q; } return p[n]; }
+/** v11: close enough to the expression? Letters only (spaces gone, so "tomato" can match "to meet a"); the expression may sit inside a
+    longer answer. Accepted when it sounds the same (vowel groups counted as one sound), or is spelt nearly the same, or both are close. */
+const hfLetters = x => hfNorm(x).replace(/[^a-z]/g, '');
+const hfSound = x => hfLetters(x).replace(/[aeiouy]+/g, 'a').replace(/(.)\1+/g, '$1');
+function hfNear(T, S){   // best similarity of T against any stretch of S (0..1)
+  if (S.indexOf(T) > -1) return 1;
+  let best = 1e9; const lo = Math.max(1, Math.floor(T.length * .7)), hi = Math.ceil(T.length * 1.3);
+  for (let len = lo; len <= hi; len++){ if (S.length <= len){ best = Math.min(best, hfLev(T, S)); break; } for (let i = 0; i + len <= S.length; i++) best = Math.min(best, hfLev(T, S.substr(i, len))); }
+  return 1 - best / T.length;
+}
+function hfSoundsLike(said, target){
+  const forms = [target, String(target).replace(/^\s*(to|a|an|the)\s+/i, '')]   // students often leave out the "to" / "a" at the start
+    .filter((f, i, a) => a.indexOf(f) === i && hfLetters(f).length >= 6);
+  return forms.some(f => { const T = hfLetters(f), TS = hfSound(f);
+    return [].concat(said || []).some(s => { const raw = hfNear(T, hfLetters(s)), snd = hfNear(TS, hfSound(s));
+      return snd === 1 || raw >= .85 || (snd >= .85 && raw >= .75); }); });
+}
 function hfSaidIt(said, expr){
-  const drop = new Set(['to','a','an','the','sb','sth','sg','sy','somebody','something','someone',"sb's","somebody's",'one',"one's"]);
+  if (hfSoundsLike(said, spoken(String(expr || '').replace(/\(.*?\)/g, ' ')).replace(/\b(sb|sth|sg|sy)\b/g, ''))) return true;
+  const drop = new Set(['to','a','an','the','be','sb','sth','sg','sy','somebody','something','someone',"sb's","somebody's",'one',"one's"]);
   const want = hfNorm(String(expr || '').replace(/\(.*?\)/g, ' ')).trim().split(' ').filter(w => w && !drop.has(w));
   if (!want.length) return false;
   return [].concat(said || []).some(s => { const got = hfNorm(s); return want.every(w => got.indexOf(' ' + w + ' ') > -1 || got.indexOf(' ' + w.replace(/'s$/, '') + ' ') > -1); });
@@ -1107,17 +1130,20 @@ async function hfRun(tok){
         break;
       }
       const ok = c.type === 'vocab' && reversed() && heard.said && hfSaidIt(heard.said, c.expr);
-      hfHeard(heard.said, ok);
+      hfHeard(ok ? heard.said : null, ok);   // v11: the front answer is not echoed (it looked like a judgement); only a match is shown
       if (ok) GSFX('yes');
       if (state.cur !== c || !alive()) continue;
       flip();
       const b = hfBack(c);
-      hfStatus(ok ? '✓ That’s it!' : '🔊 The answer…', ''); await hfSay(b.t, b.l); if (!alive()) return;
+      hfStatus(ok ? '✓ That’s it!' : heard.said ? 'Got your answer – here’s the ' + (reversed() ? 'expression' : 'meaning') : '🔊 The answer…', ''); await hfSay(b.t, b.l); if (!alive()) return;
       if (heard.cmd === 'know' || heard.cmd === 'again'){ hfDecide(heard.cmd === 'know'); continue; }   // answered before the card turned
     }
     /* 2. back: "I know it" or "again"? */
     if (!HF.mic || HF.micBlocked){ hfStatus('Did you know it?', 'Tap Again or I know it.'); return; }   // listen-only: wait for the tap (answer() moves on and kicks us)
     let asked = 0, nudged = false;
+    HF.asks = (HF.asks || 0) + 1;   // v11: say what to answer – the full sentence for the first 3 cards, then just the question
+    hfStatus('Did you know it?', 'Say “I know it” or “again”.');
+    await hfSay(HF.asks <= 3 ? 'Did you know it? Say: I know it. Or: again.' : 'Did you know it?'); if (!alive()) return;
     while (alive() && state.cur === c && state.flipped){
       hfStatus('🎤 Did you know it?', 'Say “I know it” or “again”. “Say it again” reads the answer again.');
       GSFX('tick'); const h = await hfListen(8000); if (!alive()) return;
@@ -1127,7 +1153,7 @@ async function hfRun(tok){
       if (h.cmd === 'stop') return hfPause('Tap ▶ Continue when you are ready.');
       if (h.cmd === 'reread'){ const b = hfBack(c); await hfSay(b.t, b.l); continue; }
       if (h.silence && ++asked >= 3) return hfPause('Paused – I didn’t hear anything. Tap ▶ Continue to go on.');
-      if (!nudged || h.said){ nudged = true; await hfSay(h.said ? 'Sorry? Say: I know it. Or: again.' : 'I know it, or again?'); if (!alive()) return; }
+      if (!nudged || h.said){ nudged = true; await hfSay(h.said ? 'Sorry, I didn’t catch that. Say: I know it. Or: again.' : 'Did you know it? Say: I know it. Or: again.'); if (!alive()) return; }
     }
   }
 }
