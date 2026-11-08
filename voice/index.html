@@ -11,6 +11,7 @@
    looked like a judgement); (2) Say it accepts near misses by sound ("tomato company" ≈ "to meet a company"); (3) after the answer the phone asks
    "Did you know it?" after every card – answered naturally: yes / I know it / I know … or no / no, I didn't / again (as the tap buttons).
    The answer to the front of the card never counts as yes/no any more (words like "right", "good", "no" inside an answer skipped the question).
+   A lone "no" is often lost by the recogniser: "know" / "now" / "nah" also count as no, and the reminders ask for "no, I didn't".
    After yes/no the phone says what happens: "Good." (Great. / Nice.) or "OK – this one comes back soon." (later just "Back soon.").
 /* cards.v10 (8 Nov 2026): Google's Apps Script frame never lets a page use the microphone (tested on Sándor's phone in Samsung Internet and Chrome).
    Here Hands-free therefore reads the cards aloud and the student taps; the box offers "🎤 Answer by voice", which opens the SAME deck on
@@ -347,7 +348,7 @@ button:focus-visible{outline:3px solid var(--hd);outline-offset:2px}
     <div class="hf" id="hf" hidden>
       <div class="hfrow"><span class="hfmic" id="hfMic" aria-hidden="true">🎤</span><div class="hftxt"><div class="hfbig" id="hfBig"></div><div class="hfsmall" id="hfSmall"></div></div><button class="next" id="hfGo" type="button">▶ Start</button></div>
       <div class="hfheard" id="hfHeard" hidden></div>
-      <div class="hfhelp" id="hfHelp">After each answer: <b>“yes”</b> or <b>“no”</b> (also “I know it” / “again”) · any time: “show me” · “say it again” · “stop”</div>
+      <div class="hfhelp" id="hfHelp">After each answer: <b>“yes”</b> or <b>“no”</b> (also “I know it” / “again”) · any time: “show me” · “say it again” · “stop”<br>Tip: if “no” isn’t heard, say <b>“no, I didn’t”</b> or <b>“again”</b>.</div>
       <div class="hfvoice" id="hfVoice" hidden><a class="next" id="hfVoiceGo" href="#" target="_blank" rel="noopener">🎤 Answer by voice</a><span>opens these cards on a page that can use your microphone</span></div>
       <div class="hfhelp" id="hfNoMic" hidden>Voice answers don’t work in this browser (best: Chrome on Android, Safari on iPhone) or the microphone is blocked. I still read every card aloud – tap Again or I know it.</div>
     </div>
@@ -959,7 +960,7 @@ const HF_PHRASES = {
            "once more", "come again", "what was that"],
   show:   ["show me", "show the answer", "show", "turn over", "turn it over", "turn", "flip", "answer", "tell me", "what is it", "next card", "next"],
   stop:   ["stop", "pause", "wait", "hold on", "that's enough", "finish"],
-  again:  ["again", "repeat", "no", "nope", "wrong", "missed it", "one more time", "try again", "not really", "difficult", "hard"],
+  again:  ["again", "repeat", "no", "nope", "nah", "know", "now", "no no", "wrong", "missed it", "one more time", "try again", "not really", "difficult", "hard"],
   know:   ["i know it", "i knew it", "i know", "know it", "knew it", "got it", "i've got it", "yes", "yeah", "yep", "yup", "yes i did", "i did",
            "correct", "right", "easy", "sure", "of course", "i remember", "remember it", "perfect", "good", "done"]
 };
@@ -1163,7 +1164,8 @@ async function hfRun(tok){
       if (h.cmd === 'stop') return hfPause('Tap ▶ Continue when you are ready.');
       if (h.cmd === 'reread'){ const b = hfBack(c); await hfSay(b.t, b.l); continue; }
       if (h.silence && ++asked >= 3) return hfPause('Paused – I didn’t hear anything. Tap ▶ Continue to go on.');
-      if (!nudged || h.said){ nudged = true; await hfSay(h.said ? 'Sorry, I didn’t catch that. Did you know it? Yes or no?' : 'Did you know it? Yes or no?'); if (!alive()) return; }
+      /* v11: a lone "no" is often lost by the recogniser (too short) – the second reminder asks for the longer "no, I didn't" */
+      await hfSay(h.said ? 'Sorry, I didn’t catch that. Say: no, I didn’t. Or: yes.' : asked >= 2 ? 'Say: no, I didn’t. Or: yes.' : 'Yes or no?'); if (!alive()) return;
     }
   }
 }
