@@ -10,7 +10,8 @@
    looked like a judgement); (2) Say it accepts near misses by sound ("tomato company" ≈ "to meet a company"); (3) after the answer the phone asks
    "Did you know it?" after every card – answered naturally: yes / I know it / I know … or no / no, I didn't / again (as the tap buttons).
    The answer to the front of the card never counts as yes/no any more (words like "right", "good", "no" inside an answer skipped the question).
-   A lone "no" is often lost by the recogniser: "know" / "now" / "nah" also count as no, and the reminders ask for "no, I didn't".
+   A lone "no" is often lost by the recogniser: "know" / "now" / "nah" also count as no, and after ANY miss the phone says
+   "If not, say: no, I didn't." ("yes" gets through reliably, so a miss is most likely a lost "no").
    After yes/no the phone says what happens: "Good." (Great. / Nice.) or "OK – this one comes back soon." (later just "Back soon.").
 /* cards.v10 (8 Nov 2026): Google's Apps Script frame never lets a page use the microphone (tested on Sándor's phone in Samsung Internet and Chrome).
    Here Hands-free therefore reads the cards aloud and the student taps; the box offers "🎤 Answer by voice", which opens the SAME deck on
@@ -1155,16 +1156,18 @@ async function hfRun(tok){
     hfStatus('Did you know it?', 'Say “yes” or “no”.');   // v11: asked after EVERY card
     await hfSay('Did you know it?'); if (!alive()) return;
     while (alive() && state.cur === c && state.flipped){
-      hfStatus('🎤 Did you know it?', 'Say “yes” or “no”. (“Say it again” reads the answer again.)');
+      if (!asked && !nudged) hfStatus('🎤 Did you know it?', 'Say “yes” or “no”. (“Say it again” reads the answer again.)');
       GSFX('tick'); const h = await hfListen(8000); if (!alive()) return;
       if (h.error){ HF.micBlocked = true; hfPanel(); hfStatus('Microphone blocked', 'Tap Again or I know it.'); return; }
       hfHeard(h.said, false);
       if (h.cmd === 'know' || h.cmd === 'again'){ await hfDecide(h.cmd === 'know'); if (!alive()) return; break; }
       if (h.cmd === 'stop') return hfPause('Tap ▶ Continue when you are ready.');
       if (h.cmd === 'reread'){ const b = hfBack(c); await hfSay(b.t, b.l); continue; }
+      nudged = true;
       if (h.silence && ++asked >= 3) return hfPause('Paused – I didn’t hear anything. Tap ▶ Continue to go on.');
-      /* v11: a lone "no" is often lost by the recogniser (too short) – the second reminder asks for the longer "no, I didn't" */
-      await hfSay(h.said ? 'Sorry, I didn’t catch that. Say: no, I didn’t. Or: yes.' : asked >= 2 ? 'Say: no, I didn’t. Or: yes.' : 'Yes or no?'); if (!alive()) return;
+      /* v11 (Sándor): "yes" is recognised reliably, so a miss is most likely a lost "no" – ask straight away for the longer "no, I didn't" */
+      hfStatus('🎤 Did you know it?', 'If not, say “no, I didn’t”.');
+      await hfSay('If not, say: no, I didn’t.'); if (!alive()) return;
     }
   }
 }
