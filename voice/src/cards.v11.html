@@ -8,7 +8,8 @@
 <style id="ct-main-css">
 /* cards.v11 (8 Nov 2026, voice page): after Sándor's first voice test – (1) the front-side answer is no longer echoed back ("I heard: tomato company"
    looked like a judgement); (2) Say it accepts near misses by sound ("tomato company" ≈ "to meet a company"); (3) after the answer the phone asks
-   "Did you know it? Say: I know it, or again." (the full sentence for the first cards, then just the question).
+   "Did you know it?" after every card – answered naturally: yes / I know it / I know … or no / no, I didn't / again (as the tap buttons).
+   The answer to the front of the card never counts as yes/no any more (words like "right", "good", "no" inside an answer skipped the question).
 /* cards.v10 (8 Nov 2026): Google's Apps Script frame never lets a page use the microphone (tested on Sándor's phone in Samsung Internet and Chrome).
    Here Hands-free therefore reads the cards aloud and the student taps; the box offers "🎤 Answer by voice", which opens the SAME deck on
    the voice page (GitHub Pages: goodman-assets/voice/) – the deck travels in the link's #part, which is never sent to any server.
@@ -344,7 +345,7 @@ button:focus-visible{outline:3px solid var(--hd);outline-offset:2px}
     <div class="hf" id="hf" hidden>
       <div class="hfrow"><span class="hfmic" id="hfMic" aria-hidden="true">🎤</span><div class="hftxt"><div class="hfbig" id="hfBig"></div><div class="hfsmall" id="hfSmall"></div></div><button class="next" id="hfGo" type="button">▶ Start</button></div>
       <div class="hfheard" id="hfHeard" hidden></div>
-      <div class="hfhelp" id="hfHelp">You can say: <b>“I know it”</b> · <b>“again”</b> · “show me” · “say it again” · “stop”</div>
+      <div class="hfhelp" id="hfHelp">After each answer: <b>“yes”</b> or <b>“no”</b> (also “I know it” / “again”) · any time: “show me” · “say it again” · “stop”</div>
       <div class="hfvoice" id="hfVoice" hidden><a class="next" id="hfVoiceGo" href="#" target="_blank" rel="noopener">🎤 Answer by voice</a><span>opens these cards on a page that can use your microphone</span></div>
       <div class="hfhelp" id="hfNoMic" hidden>Voice answers don’t work in this browser (best: Chrome on Android, Safari on iPhone) or the microphone is blocked. I still read every card aloud – tap Again or I know it.</div>
     </div>
@@ -950,17 +951,25 @@ document.addEventListener('keydown', e => {
    spaced-repetition version can import real study history. */
 const HF_PHRASES = {
   /* checked first: a negation always wins ("I don't know it" contains "know it") */
-  neg:    ["don't know", "dont know", "do not know", "didn't know", "didnt know", "did not know", "not sure", "no idea",
+  neg:    ["don't know", "dont know", "do not know", "didn't know", "didnt know", "did not know", "not sure", "no idea", "i didn't", "i didnt", "i did not", "didn't", "didnt",
            "i forgot", "forgot", "forget it", "not yet", "can't remember", "cant remember", "cannot remember", "don't remember", "dont remember"],
   reread: ["say it again", "say that again", "read it again", "read that again", "repeat that", "repeat it", "pardon", "sorry what",
            "once more", "come again", "what was that"],
   show:   ["show me", "show the answer", "show", "turn over", "turn it over", "turn", "flip", "answer", "tell me", "what is it", "next card", "next"],
   stop:   ["stop", "pause", "wait", "hold on", "that's enough", "finish"],
   again:  ["again", "repeat", "no", "nope", "wrong", "missed it", "one more time", "try again", "not really", "difficult", "hard"],
-  know:   ["i know it", "i knew it", "i know", "know it", "knew it", "got it", "i've got it", "yes", "yeah", "yep", "yup",
+  know:   ["i know it", "i knew it", "i know", "know it", "knew it", "got it", "i've got it", "yes", "yeah", "yep", "yup", "yes i did", "i did",
            "correct", "right", "easy", "sure", "of course", "i remember", "remember it", "perfect", "good", "done"]
 };
 function hfNorm(s){ return ' ' + String(s || '').toLowerCase().replace(/[’‘`]/g, "'").replace(/[^a-z' ]+/g, ' ').replace(/\s+/g, ' ').trim() + ' '; }
+/** v11: the answer to the FRONT of a card: only a short, plain command counts ("show me", "say it again", "stop", "I don't know");
+    everything else is the student's answer and never a yes/no – that question is always asked once the card has turned. */
+function hfParseFront(said){
+  const top = hfNorm([].concat(said || [])[0] || '');
+  if (HF_PHRASES.neg.some(p => top.indexOf(' ' + p + ' ') > -1)) return 'again';
+  const cmd = hfParse(top);
+  return (cmd === 'show' || cmd === 'stop' || cmd === 'reread') && top.trim().split(' ').length <= 4 ? cmd : null;
+}
 /** What did the student say? → 'again' | 'know' | 'show' | 'reread' | 'stop' | null. Takes one transcript or a list (alternatives). */
 function hfParse(said){
   const list = [].concat(said || []).map(hfNorm).filter(t => t.trim());
@@ -1124,6 +1133,7 @@ async function hfRun(tok){
         if (HF.mic && !HF.micBlocked){ GSFX('tick'); heard = await hfListen(7000); } else { await new Promise(r => setTimeout(r, 4000)); heard = { silence: true }; }
         if (!alive()) return;
         if (heard.error){ HF.micBlocked = true; hfPanel(); hfStatus('Microphone blocked', 'Carrying on: I read the cards, you tap the buttons.'); continue; }
+        if (heard.said) heard.cmd = hfParseFront(heard.said);   // v11: an answer is an answer, not a yes/no
         if (heard.cmd === 'stop') return hfPause('Say nothing and tap ▶ Continue when you are ready.');
         if (heard.cmd === 'reread' && tries++ < 3){ await hfSay(f.t, f.l); if (!alive()) return; continue; }
         break;
@@ -1135,16 +1145,15 @@ async function hfRun(tok){
       flip();
       const b = hfBack(c);
       hfStatus(ok ? '✓ That’s it!' : heard.said ? 'Got your answer – here’s the ' + (reversed() ? 'expression' : 'meaning') : '🔊 The answer…', ''); await hfSay(b.t, b.l); if (!alive()) return;
-      if (heard.cmd === 'know' || heard.cmd === 'again'){ hfDecide(heard.cmd === 'know'); continue; }   // answered before the card turned
+      if (heard.cmd === 'again'){ hfDecide(false); continue; }   // "I don't know" before the card turned = again
     }
     /* 2. back: "I know it" or "again"? */
     if (!HF.mic || HF.micBlocked){ hfStatus('Did you know it?', 'Tap Again or I know it.'); return; }   // listen-only: wait for the tap (answer() moves on and kicks us)
     let asked = 0, nudged = false;
-    HF.asks = (HF.asks || 0) + 1;   // v11: say what to answer – the full sentence for the first 3 cards, then just the question
-    hfStatus('Did you know it?', 'Say “I know it” or “again”.');
-    await hfSay(HF.asks <= 3 ? 'Did you know it? Say: I know it. Or: again.' : 'Did you know it?'); if (!alive()) return;
+    hfStatus('Did you know it?', 'Say “yes” or “no”.');   // v11: asked after EVERY card
+    await hfSay('Did you know it?'); if (!alive()) return;
     while (alive() && state.cur === c && state.flipped){
-      hfStatus('🎤 Did you know it?', 'Say “I know it” or “again”. “Say it again” reads the answer again.');
+      hfStatus('🎤 Did you know it?', 'Say “yes” or “no”. (“Say it again” reads the answer again.)');
       GSFX('tick'); const h = await hfListen(8000); if (!alive()) return;
       if (h.error){ HF.micBlocked = true; hfPanel(); hfStatus('Microphone blocked', 'Tap Again or I know it.'); return; }
       hfHeard(h.said, false);
@@ -1152,7 +1161,7 @@ async function hfRun(tok){
       if (h.cmd === 'stop') return hfPause('Tap ▶ Continue when you are ready.');
       if (h.cmd === 'reread'){ const b = hfBack(c); await hfSay(b.t, b.l); continue; }
       if (h.silence && ++asked >= 3) return hfPause('Paused – I didn’t hear anything. Tap ▶ Continue to go on.');
-      if (!nudged || h.said){ nudged = true; await hfSay(h.said ? 'Sorry, I didn’t catch that. Say: I know it. Or: again.' : 'Did you know it? Say: I know it. Or: again.'); if (!alive()) return; }
+      if (!nudged || h.said){ nudged = true; await hfSay(h.said ? 'Sorry, I didn’t catch that. Did you know it? Yes or no?' : 'Did you know it? Yes or no?'); if (!alive()) return; }
     }
   }
 }
