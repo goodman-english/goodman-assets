@@ -10,6 +10,7 @@
    looked like a judgement); (2) Say it accepts near misses by sound ("tomato company" ≈ "to meet a company"); (3) after the answer the phone asks
    "Did you know it?" after every card – answered naturally: yes / I know it / I know … or no / no, I didn't / again (as the tap buttons).
    The answer to the front of the card never counts as yes/no any more (words like "right", "good", "no" inside an answer skipped the question).
+   After yes/no the phone says what happens: "Good." (Great. / Nice.) or "OK – this one comes back soon." (later just "Back soon.").
 /* cards.v10 (8 Nov 2026): Google's Apps Script frame never lets a page use the microphone (tested on Sándor's phone in Samsung Internet and Chrome).
    Here Hands-free therefore reads the cards aloud and the student taps; the box offers "🎤 Answer by voice", which opens the SAME deck on
    the voice page (GitHub Pages: goodman-assets/voice/) – the deck travels in the link's #part, which is never sent to any server.
@@ -1145,7 +1146,7 @@ async function hfRun(tok){
       flip();
       const b = hfBack(c);
       hfStatus(ok ? '✓ That’s it!' : heard.said ? 'Got your answer – here’s the ' + (reversed() ? 'expression' : 'meaning') : '🔊 The answer…', ''); await hfSay(b.t, b.l); if (!alive()) return;
-      if (heard.cmd === 'again'){ hfDecide(false); continue; }   // "I don't know" before the card turned = again
+      if (heard.cmd === 'again'){ await hfDecide(false); if (!alive()) return; continue; }   // "I don't know" before the card turned = again
     }
     /* 2. back: "I know it" or "again"? */
     if (!HF.mic || HF.micBlocked){ hfStatus('Did you know it?', 'Tap Again or I know it.'); return; }   // listen-only: wait for the tap (answer() moves on and kicks us)
@@ -1157,7 +1158,7 @@ async function hfRun(tok){
       GSFX('tick'); const h = await hfListen(8000); if (!alive()) return;
       if (h.error){ HF.micBlocked = true; hfPanel(); hfStatus('Microphone blocked', 'Tap Again or I know it.'); return; }
       hfHeard(h.said, false);
-      if (h.cmd === 'know' || h.cmd === 'again'){ hfDecide(h.cmd === 'know'); break; }
+      if (h.cmd === 'know' || h.cmd === 'again'){ await hfDecide(h.cmd === 'know'); if (!alive()) return; break; }
       if (h.cmd === 'stop') return hfPause('Tap ▶ Continue when you are ready.');
       if (h.cmd === 'reread'){ const b = hfBack(c); await hfSay(b.t, b.l); continue; }
       if (h.silence && ++asked >= 3) return hfPause('Paused – I didn’t hear anything. Tap ▶ Continue to go on.');
@@ -1165,7 +1166,15 @@ async function hfRun(tok){
     }
   }
 }
-function hfDecide(ok){ GSFX(ok ? 'yes' : 'oops'); answerAs(ok, 'hf'); }
+/* v11: say what happens to the card – "Good." / "Great." / "Nice." for yes; for no "OK – this one comes back soon." the first two times
+   in a session, then just "Back soon." (Sándor: clear, but short enough not to annoy) */
+const HF_YES = ['Good.', 'Great.', 'Nice.'];
+async function hfDecide(ok){
+  GSFX(ok ? 'yes' : 'oops'); const card = state.cur;
+  if (ok){ HF.yes = (HF.yes || 0) + 1; hfStatus('✓ Known', ''); await hfSay(HF_YES[(HF.yes - 1) % HF_YES.length]); }
+  else { HF.no = (HF.no || 0) + 1; hfStatus('↻ Back soon', 'This card comes back after a few others.'); await hfSay(HF.no <= 2 ? 'OK – this one comes back soon.' : 'Back soon.'); }
+  if (state.cur === card && state.flipped) answerAs(ok, 'hf');   // the answer counts even if the student paused during the confirmation
+}
 
 $('mo-on').addEventListener('click', () => setMode('on'));
 $('mo-free').addEventListener('click', () => setMode('free'));
